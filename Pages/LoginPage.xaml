@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="sistemaPlaya.LoginPage"
+             Title="Iniciar Sesión - Playa de Estacionamiento">
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="20">
+        <VerticalStackLayout Grid.Row="1" Spacing="20" VerticalOptions="CenterAndExpand" HorizontalOptions="FillAndExpand">
+
+            <Label Text="Sistema de Playa de Estacionamiento"
+                   FontSize="26"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   HorizontalTextAlignment="Center"
+                   Margin="0,0,0,30"
+                   TextColor="{StaticResource Primary}"/>
+
+            <Frame HasShadow="True" CornerRadius="10" Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Usuario:" FontSize="16" TextColor="{StaticResource Gray900}"/>
+                    <Entry x:Name="UsernameEntry"
+                           Placeholder="Ingrese su usuario"
+                           Keyboard="Email"
+                           ReturnType="Next"
+                           ClearButtonVisibility="WhileEditing"/>
+
+                    <Label Text="Contraseña:" FontSize="16" TextColor="{StaticResource Gray900}"/>
+                    <Entry x:Name="PasswordEntry"
+                           Placeholder="Ingrese su contraseña"
+                           IsPassword="True"
+                           ReturnType="Done"
+                           ClearButtonVisibility="WhileEditing"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <Button x:Name="LoginButton"
+                    Text="Iniciar Sesión"
+                    Clicked="OnLoginButtonClicked"
+                    Margin="0,20,0,0"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="{StaticResource White}"
+                    CornerRadius="10"
+                    HeightRequest="50"/>
+
+            <ActivityIndicator x:Name="LoadingIndicator"
+                               IsRunning="False"
+                               IsVisible="False"
+                               HorizontalOptions="Center"
+                               Color="{StaticResource Primary}"/>
+
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

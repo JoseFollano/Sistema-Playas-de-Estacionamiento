@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="sistemaPlaya.AperturarCajaPage"
+             Title="Aperturar Caja - Playa">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="20" Padding="20">
+
+            <Label Text="Apertura de Caja - Playa"
+                   FontSize="26"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   Margin="0,0,0,20"
+                   TextColor="{StaticResource Primary}"/>
+
+            <Frame HasShadow="True" CornerRadius="10" Padding="15">
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="Datos de la Caja:" FontSize="18" FontAttributes="Bold" TextColor="{StaticResource Gray900}"/>
+
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" VerticalOptions="Center">
+                        <VerticalStackLayout Grid.Column="0" Spacing="5">
+                            <Label Text="Código de Caja:" FontSize="16" TextColor="{StaticResource Gray900}"/>
+                            <Entry x:Name="CodigoCajaEntry"
+                                   Placeholder="Ingrese o se generará"
+                                   ClearButtonVisibility="WhileEditing"
+                                   Keyboard="Numeric"
+                                   IsEnabled="True"/>
+                        </VerticalStackLayout>
+                        <Button Grid.Column="1" Text="Cargar" Clicked="OnCargarCajaClicked"
+                                BackgroundColor="{StaticResource Secondary}" TextColor="White" CornerRadius="8" HeightRequest="45" WidthRequest="100"
+                                VerticalOptions="End"/>
+                    </Grid>
+
+                    <Button Text="Nueva Caja" Clicked="OnNuevaCajaClicked"
+                            BackgroundColor="{StaticResource Primary}" TextColor="White" CornerRadius="8" HeightRequest="48"/>
+
+                    <Label Text="Fecha de Apertura:" FontSize="16" TextColor="{StaticResource Gray900}"/>
+                    <DatePicker x:Name="FechaAperturaDatePicker"
+                                Format="dd/MM/yyyy"
+                                IsEnabled="False"/>
+
+                    <Label Text="Importe Inicial:" FontSize="16" TextColor="{StaticResource Gray900}"/>
+                    <Entry x:Name="ImporteInicialEntry"
+                           Placeholder="Ingrese el importe inicial"
+                           ClearButtonVisibility="WhileEditing"
+                           Keyboard="Numeric"
+                           IsEnabled="True"/>
+
+                    <ActivityIndicator x:Name="LoadingIndicator" IsRunning="False" IsVisible="False" Color="{StaticResource Primary}" HorizontalOptions="Center"/>
+
+                    <Button x:Name="GuardarCajaButton" Text="Guardar y Abrir Caja" Clicked="OnGuardarCajaClicked"
+                            BackgroundColor="{StaticResource Success}" TextColor="White" CornerRadius="10" HeightRequest="55"
+                            Margin="0,20,0,0"/>
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

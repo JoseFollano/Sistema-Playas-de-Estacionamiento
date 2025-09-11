@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="sistemaPlaya.GenerarBoletaPage"
+             Title="Generar Documento">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="20" Padding="20">
+            <Label x:Name="TituloLabel"
+                   Text="Generar Boleta"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   TextColor="{StaticResource Primary}"/>
+
+            <!-- Información del documento -->
+            <Frame HasShadow="True" CornerRadius="10" Padding="15">
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="Datos del Documento" 
+                           FontSize="18" 
+                           FontAttributes="Bold" 
+                           TextColor="{StaticResource Gray900}"/>
+
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                        <Label Grid.Column="0" Text="Nro Documento:" 
+                               VerticalOptions="Center"
+                               FontSize="16" 
+                               TextColor="{StaticResource Gray900}"/>
+                        <Entry x:Name="NroDocumentoEntry" 
+                               Grid.Column="1" 
+                               Placeholder="Ingrese DNI (8 dígitos)"
+                               Keyboard="Numeric"
+                               MaxLength="8"/>
+                        <Button x:Name="BuscarButton" 
+                                Grid.Column="2" 
+                                Text="🔍" 
+                                Clicked="OnBuscarClicked"
+                                BackgroundColor="{StaticResource Secondary}"
+                                TextColor="White"
+                                CornerRadius="8"
+                                WidthRequest="50"
+                                HeightRequest="40"/>
+                    </Grid>
+
+                    <Label Text="Cliente:" 
+                           FontSize="16" 
+                           TextColor="{StaticResource Gray900}"/>
+                    <Entry x:Name="ClienteEntry" 
+                           Placeholder="Nombre del cliente"
+                           IsEnabled="False"/>
+
+                    <Label Text="Dirección:" 
+                           FontSize="16" 
+                           TextColor="{StaticResource Gray900}"/>
+                    <Entry x:Name="DireccionEntry" 
+                           Placeholder="Dirección del cliente"/>
+
+                    <Label Text="Observación:" 
+                           FontSize="16" 
+                           TextColor="{StaticResource Gray900}"/>
+                    <Editor x:Name="ObservacionEditor" 
+                            Placeholder="Observaciones adicionales"
+                            HeightRequest="80"/>
+
+                    <BoxView HeightRequest="1" Color="{StaticResource Gray300}" Margin="0,10"/>
+
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="15" RowSpacing="10">
+                        <Label Grid.Row="0" Grid.Column="0" Text="Nro:" 
+                               FontSize="16" 
+                               TextColor="{StaticResource Gray900}"/>
+                        <Label x:Name="NroDocumentoLabel" 
+                               Grid.Row="0" Grid.Column="1" 
+                               Text="001-000001" 
+                               FontSize="16" 
+                               TextColor="{StaticResource Gray900}" 
+                               HorizontalOptions="End"/>
+
+                        <Label Grid.Row="1" Grid.Column="0" Text="Fecha Emisión:" 
+                               FontSize="16" 
+                               TextColor="{StaticResource Gray900}"/>
+                        <Label x:Name="FechaEmisionLabel" 
+                               Grid.Row="1" Grid.Column="1" 
+                               Text="{Binding FechaActual}" 
+                               FontSize="16" 
+                               TextColor="{StaticResource Gray900}" 
+                               HorizontalOptions="End"/>
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="{StaticResource Gray300}" Margin="0,10"/>
+
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto" ColumnSpacing="15">
+                        <Label Grid.Column="0" Text="Importe Total:" 
+                               FontSize="18" 
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource Gray900}"/>
+                        <Label x:Name="ImporteTotalLabel" 
+                               Grid.Column="1" 
+                               Text="S/ 0.00" 
+                               FontSize="18" 
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource Primary}" 
+                               HorizontalOptions="End"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Botones de acción -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="15">
+                <Button Grid.Column="0" 
+                        Text="Cancelar" 
+                        BackgroundColor="{StaticResource Red}" 
+                        TextColor="White" 
+                        CornerRadius="10" 
+                        HeightRequest="50"
+                        Clicked="OnCancelarClicked"/>
+
+                <Button Grid.Column="1" 
+                        x:Name="GuardarButton"
+                        Text="Guardar Documento" 
+                        BackgroundColor="{StaticResource Primary}" 
+                        TextColor="White" 
+                        CornerRadius="10" 
+                        HeightRequest="50"
+                        Clicked="OnGuardarClicked"/>
+            </Grid>
+
+            <ActivityIndicator x:Name="LoadingIndicator" 
+                               IsRunning="False" 
+                               IsVisible="False" 
+                               Color="{StaticResource Primary}" 
+                               HorizontalOptions="Center"/>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

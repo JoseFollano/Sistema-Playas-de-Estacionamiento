@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="sistemaPlaya.CierreCajaPage"
+             Title="Cerrar Caja - Playa">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="20" Padding="20">
+
+            <Label Text="Cierre de Caja - Playa"
+                   FontSize="26"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   Margin="0,0,0,20"
+                   TextColor="{StaticResource Primary}"/>
+
+            <Frame HasShadow="True" CornerRadius="10" Padding="15">
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="Detalles de la Caja Abierta:" FontSize="18" FontAttributes="Bold" TextColor="{StaticResource Gray900}"/>
+
+                    <Label x:Name="CajaAbiertaLabel"
+                           Text="Caja: [Código de Caja] - Usuario: [Nombre Usuario]"
+                           FontSize="16"
+                           TextColor="{StaticResource Secondary}"/>
+
+                    <Label Text="Fecha de Cierre:" FontSize="16" TextColor="{StaticResource Gray900}"/>
+                    <DatePicker x:Name="FechaCierreDatePicker"
+                                Format="dd/MM/yyyy HH:mm"
+                                IsEnabled="False"/>
+
+                    <Label Text="Importe Recaudado:" FontSize="16" TextColor="{StaticResource Gray900}"/>
+                    <Entry x:Name="ImporteRecaudadoEntry"
+                           Placeholder="Ingrese el importe total recaudado"
+                           ClearButtonVisibility="WhileEditing"
+                           Keyboard="Numeric"
+                           IsEnabled="True"/>
+
+                    <ActivityIndicator x:Name="LoadingIndicator" IsRunning="False" IsVisible="False" Color="{StaticResource Primary}" HorizontalOptions="Center"/>
+
+                    <Button x:Name="CerrarCajaButton" Text="Cerrar Caja" Clicked="OnCerrarCajaClicked"
+                            BackgroundColor="{StaticResource Red}" TextColor="White" CornerRadius="10" HeightRequest="55"
+                            Margin="0,20,0,0"/>
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

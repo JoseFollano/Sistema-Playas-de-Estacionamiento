@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="sistemaPlaya.ConsultaVehiculoPage"
+             Title="Consultar Vehículo - Playa">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="20" Padding="20">
+
+            <Label Text="Consulta de Vehículo"
+                   FontSize="26"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   Margin="0,0,0,20"
+                   TextColor="{StaticResource Primary}"/>
+
+            <Frame HasShadow="True" CornerRadius="10" Padding="15">
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="Datos del Vehículo:" FontSize="18" FontAttributes="Bold" TextColor="{StaticResource Gray900}"/>
+
+                    <Label Text="Placa del Vehículo:" FontSize="16" TextColor="{StaticResource Gray900}"/>
+                    <Entry x:Name="PlacaEntry"
+                           Placeholder="Ingrese la placa (6 dígitos)"
+                           ClearButtonVisibility="WhileEditing"
+                           MaxLength="6"
+                           TextChanged="OnPlacaTextChanged"
+                           Completed="OnPlacaCompleted"/>
+
+                    <Button x:Name="ConsultarButton" 
+                            Text="Consultar Vehículo" 
+                            Clicked="OnConsultarVehiculoClicked"
+                            BackgroundColor="{StaticResource Primary}" 
+                            TextColor="White" 
+                            CornerRadius="10" 
+                            HeightRequest="50"
+                            Margin="0,10,0,0"/>
+
+                    <ActivityIndicator x:Name="LoadingIndicator" 
+                                       IsRunning="False" 
+                                       IsVisible="False" 
+                                       Color="{StaticResource Primary}" 
+                                       HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Sección de resultados -->
+            <Frame x:Name="ResultadosFrame"
+                   IsVisible="False"
+                   HasShadow="True" 
+                   CornerRadius="10" 
+                   Padding="15"
+                   BackgroundColor="{StaticResource Gray100}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Información del Vehículo" 
+                           FontSize="18" 
+                           FontAttributes="Bold" 
+                           TextColor="{StaticResource Gray900}"
+                           HorizontalOptions="Center"/>
+
+                    <BoxView HeightRequest="1" Color="{StaticResource Gray300}" Margin="0,5"/>
+
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="15">
+                        <Label Grid.Row="0" Grid.Column="0" Text="Placa:" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource Gray900}"/>
+                        <Label x:Name="PlacaResultadoLabel" Grid.Row="0" Grid.Column="1" Text="-" FontSize="16" TextColor="{StaticResource Gray900}" HorizontalOptions="End"/>
+
+                        <Label Grid.Row="1" Grid.Column="0" Text="Tipo de Vehículo:" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource Gray900}"/>
+                        <Label x:Name="TipoVehiculoLabel" Grid.Row="1" Grid.Column="1" Text="-" FontSize="16" TextColor="{StaticResource Gray900}" HorizontalOptions="End"/>
+
+                        <Label Grid.Row="2" Grid.Column="0" Text="Tarifa por Hora:" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource Gray900}"/>
+                        <Label x:Name="TarifaLabel" Grid.Row="2" Grid.Column="1" Text="-" FontSize="16" TextColor="{StaticResource Gray900}" HorizontalOptions="End"/>
+
+                        <Label Grid.Row="3" Grid.Column="0" Text="Fecha de Ingreso:" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource Gray900}"/>
+                        <Label x:Name="FechaIngresoLabel" Grid.Row="3" Grid.Column="1" Text="-" FontSize="16" TextColor="{StaticResource Gray900}" HorizontalOptions="End"/>
+
+                        <Label Grid.Row="4" Grid.Column="0" Text="Tiempo en Playa:" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource Gray900}"/>
+                        <Label x:Name="TiempoLabel" Grid.Row="4" Grid.Column="1" Text="-" FontSize="16" TextColor="{StaticResource Gray900}" HorizontalOptions="End"/>
+                    </Grid>
+
+                    <Button x:Name="AccionesButton"
+                            Text="Acciones"
+                            Clicked="OnAccionesClicked"
+                            BackgroundColor="{StaticResource Secondary}"
+                            TextColor="White"
+                            CornerRadius="8"
+                            HeightRequest="45"
+                            Margin="0,10,0,0"
+                            IsVisible="False"/>
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
