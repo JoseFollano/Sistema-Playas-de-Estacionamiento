@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="sistemaPlaya.Pages.RegistrarVehiculoPage"
+             Title="Playa de Estacionamiento">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Color x:Key="PrimaryColor">#2B0B98</Color>
+            <Color x:Key="SecondaryColor">#4CAF50</Color>
+            <Color x:Key="DangerColor">#F44336</Color>
+            <Color x:Key="WarningColor">#FF9800</Color>
+            <Color x:Key="LightGray">#ECEFF1</Color>
+            <Color x:Key="FrameGray">#F5F5F5</Color>
+            <Color x:Key="FrameBorder">#B0BEC5</Color>
+            <Color x:Key="DarkText">#263238</Color>
+            <Color x:Key="LightText">#78909C</Color>
+            <Color x:Key="AccentColor">#00BCD4</Color>
+            <Color x:Key="HeaderGradientStart">#2B0B98</Color>
+            <Color x:Key="HeaderGradientEnd">#00BCD4</Color>
+
+            <Style TargetType="Label">
+                <Setter Property="TextColor" Value="{StaticResource DarkText}" />
+            </Style>
+
+            <Style TargetType="Frame">
+                <Setter Property="BackgroundColor" Value="{StaticResource FrameGray}" />
+                <Setter Property="BorderColor" Value="{StaticResource FrameBorder}" />
+                <Setter Property="CornerRadius" Value="16" />
+                <Setter Property="HasShadow" Value="True" />
+                <Setter Property="Padding" Value="18" />
+            </Style>
+
+            <Style TargetType="Button">
+                <Setter Property="CornerRadius" Value="12" />
+                <Setter Property="FontSize" Value="16" />
+                <Setter Property="Padding" Value="16" />
+                <Setter Property="TextColor" Value="White" />
+            </Style>
+
+            <Style x:Key="PrimaryButton" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="{StaticResource PrimaryColor}" />
+            </Style>
+
+            <Style x:Key="SuccessButton" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="{StaticResource SecondaryColor}" />
+            </Style>
+
+            <Style x:Key="DangerButton" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="{StaticResource DangerColor}" />
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+            <!-- Encabezado visual con degradado y icono -->
+            <Frame HasShadow="False" Padding="0" Margin="0,0,0,10" CornerRadius="20">
+                <Grid HeightRequest="80">
+                    <Grid.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="{StaticResource HeaderGradientStart}" Offset="0.0" />
+                            <GradientStop Color="{StaticResource HeaderGradientEnd}" Offset="1.0" />
+                        </LinearGradientBrush>
+                    </Grid.Background>
+                    <HorizontalStackLayout VerticalOptions="Center" HorizontalOptions="Center">
+                        <Image Source="car_icon.png" HeightRequest="40" WidthRequest="40" Margin="0,0,10,0"/>
+                        <Label Text="Registrar Vehículo" FontSize="24" FontAttributes="Bold" TextColor="White"/>
+                    </HorizontalStackLayout>
+                </Grid>
+            </Frame>
+
+            <BoxView HeightRequest="1" Color="{StaticResource FrameBorder}" Margin="0,0,0,10"/>
+
+            <!-- Estado de Caja y Estacionamiento -->
+            <Frame>
+                <Grid ColumnDefinitions="*, *, *, *" RowDefinitions="Auto, Auto" ColumnSpacing="10" RowSpacing="10">
+                    <Label Text="Estado de la Caja:" Grid.Row="0" Grid.Column="0"/>
+                    <Label Text="{Binding EstadoCaja}" Grid.Row="0" Grid.Column="1" FontAttributes="Bold"/>
+
+                    <Label Text="Nro Estacionamiento:" Grid.Row="0" Grid.Column="2"/>
+                    <Label Text="{Binding NumeroEstacionamiento}" Grid.Row="0" Grid.Column="3" FontAttributes="Bold"/>
+
+                    <Label Text="Ocupados:" Grid.Row="1" Grid.Column="0"/>
+                    <Label Text="{Binding Ocupados}" Grid.Row="1" Grid.Column="1" FontAttributes="Bold"/>
+
+                    <Label Text="Disponibles:" Grid.Row="1" Grid.Column="2"/>
+                    <Label Text="{Binding Disponibles}" Grid.Row="1" Grid.Column="3" FontAttributes="Bold"/>
+                </Grid>
+            </Frame>
+
+            <BoxView HeightRequest="1" Color="{StaticResource FrameBorder}" Margin="0,0,0,10"/>
+
+            <!-- Placa y estado -->
+            <Frame>
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Placa del vehículo (6 dígitos):" FontAttributes="Bold"/>
+                    <Entry x:Name="EntryPlaca"
+                           Placeholder="Ejemplo: ABC123"
+                           Text="{Binding Placa}"
+                           MaxLength="6"
+                           Completed="OnPlacaCompleted"
+                           BackgroundColor="{StaticResource LightGray}"
+                           Keyboard="Text"/>
+                    <Label Text="{Binding EstadoIngreso}" 
+                           FontAttributes="Bold" 
+                           TextColor="{Binding EstadoIngresoColor}"
+                           HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Tipo de vehículo y tarifa -->
+            <Frame>
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Tipo de vehículo:" FontAttributes="Bold"/>
+                    <Picker x:Name="PickerTipoVehiculo"
+                            Title="Seleccione tipo de vehículo"
+                            ItemsSource="{Binding TiposVehiculo}"
+                            SelectedItem="{Binding TipoVehiculo}"
+                            BackgroundColor="{StaticResource AccentColor}"/>
+
+                    <Label Text="Tarifa por hora:" FontAttributes="Bold"/>
+                    <Label Text="{Binding TarifaHora, StringFormat='S/. {0:F2}'}" 
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Campo de Observación -->
+            <Frame>
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Observación (opcional):" FontAttributes="Bold"/>
+                    <Entry Text="{Binding Observacion}" 
+                           Placeholder="Ejemplo: color, modelo, etc."
+                           BackgroundColor="{StaticResource LightGray}"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Botones -->
+            <Grid ColumnDefinitions="*, *, *" ColumnSpacing="10">
+                <Button Text="Registrar" 
+                        Style="{StaticResource SuccessButton}"
+                        Clicked="OnRegistrarClicked"/>
+                <Button Text="Cambiar Plan" 
+                        Grid.Column="1"
+                        Style="{StaticResource PrimaryButton}"
+                        Clicked="OnCambiarPlanClicked"/>
+                <Button Text="Anular" 
+                        Grid.Column="2"
+                        Style="{StaticResource DangerButton}"
+                        Clicked="OnAnularClicked"/>
+            </Grid>
+
+            <!-- Sección de pago (solo visible para salida) -->
+            <Frame IsVisible="{Binding MostrarPago}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Información de Ticket" FontAttributes="Bold" HorizontalOptions="Center"/>
+                    <Label Text="N° Ticket:" FontAttributes="Bold"/>
+                    <Label Text="{Binding NumeroTicket}" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource PrimaryColor}"/>
+                    <Label Text="Fecha de ingreso:" FontAttributes="Bold"/>
+                    <Label Text="{Binding FechaIngreso, StringFormat='{0:dd/MM/yyyy HH:mm}'}"/>
+                    <Label Text="Tiempo en playa:" FontAttributes="Bold"/>
+                    <Label Text="{Binding TiempoEstacionado}" FontSize="16" FontAttributes="Bold"/>
+                    <Label Text="Total a cobrar:" FontAttributes="Bold"/>
+                    <Label Text="{Binding TotalPagar, StringFormat='S/. {0:F2}'}" FontSize="18" FontAttributes="Bold" TextColor="{StaticResource SecondaryColor}"/>
+
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8" Margin="0,10,0,0">
+                        <Button Text="Pagar Ticket" Style="{StaticResource SuccessButton}" Clicked="OnPagarClicked"/>
+                        <Button Text="Factura" Grid.Column="1" Style="{StaticResource PrimaryButton}" Clicked="OnFacturaClicked"/>
+                        <Button Text="Boleta" Grid.Column="2" Style="{StaticResource DangerButton}" Clicked="OnBoletaClicked"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

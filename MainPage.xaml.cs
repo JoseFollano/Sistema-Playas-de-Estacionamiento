@@ -1,4 +1,5 @@
 ﻿using Microsoft.Maui.Storage;
+using sistemaPlaya.Pages;
 using System;
 using System.Net.Http;
 using System.Text.Json;
@@ -189,15 +190,15 @@ namespace sistemaPlaya
         private async void OnEntradaVehiculoClicked(object sender, EventArgs e)
         {
             // Verificar que haya caja abierta
-            int cajaAbiertaId = Preferences.Get("CajaAbiertaId", 0);
-            if (cajaAbiertaId == 0)
-            {
-                await DisplayAlert("Error", "Debe abrir una caja primero.", "OK");
-                return;
-            }
+            //int cajaAbiertaId = Preferences.Get("CajaAbiertaId", 0);
+            //if (cajaAbiertaId == 0)
+            //{
+            //    await DisplayAlert("Error", "Debe abrir una caja primero.", "OK");
+            //    return;
+            //}
 
             // Navegar a la página de entrada de vehículo
-            //await Navigation.PushAsync(new EntradaVehiculoPage());
+            await Navigation.PushAsync(new RegistrarVehiculoPage());
         }
 
         private async void OnConsultarVehiculoClicked(object sender, EventArgs e)

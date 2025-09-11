@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="sistemaPlaya.Pages.ModalPagoPage"
+             Title="ModalPagoPage">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Color x:Key="PrimaryColor">#2B0B98</Color>
+            <Color x:Key="SecondaryColor">#4CAF50</Color>
+            <Color x:Key="DangerColor">#F44336</Color>
+            <Color x:Key="LightGray">#F5F5F5</Color>
+            <Color x:Key="DarkText">#2C3E50</Color>
+            <Color x:Key="LightText">#7F8C8D</Color>
+
+            <Style TargetType="Label">
+                <Setter Property="TextColor" Value="{StaticResource DarkText}" />
+            </Style>
+            <Style TargetType="Frame">
+                <Setter Property="BackgroundColor" Value="White" />
+                <Setter Property="BorderColor" Value="#DDDDDD" />
+                <Setter Property="CornerRadius" Value="10" />
+                <Setter Property="HasShadow" Value="True" />
+                <Setter Property="Padding" Value="14" />
+            </Style>
+            <Style TargetType="Button">
+                <Setter Property="CornerRadius" Value="10" />
+                <Setter Property="FontSize" Value="15" />
+                <Setter Property="Padding" Value="14" />
+                <Setter Property="TextColor" Value="White" />
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="18" Padding="18">
+
+            <!-- SIN DATOS DEL CLIENTE -->
+            <Frame>
+                <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                    <Label Text="SIN DATOS DEL CLIENTE" FontAttributes="Bold" />
+                    <Switch IsToggled="{Binding SinDatosCliente}" />
+                </HorizontalStackLayout>
+            </Frame>
+
+            <!-- Datos del cliente -->
+            <Frame>
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Nro Documento:" FontAttributes="Bold"/>
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <Entry Text="{Binding NumeroDocumento}" 
+                               Placeholder="Ingrese Nro Documento"
+                               Keyboard="Numeric"
+                               IsEnabled="{Binding SinDatosCliente, Converter={StaticResource InverseBooleanConverter}}"/>
+                        <Button Text="Buscar"
+                                Grid.Column="1"
+                                Clicked="OnBuscarClicked"
+                                BackgroundColor="{StaticResource PrimaryColor}"
+                                IsEnabled="{Binding SinDatosCliente, Converter={StaticResource InverseBooleanConverter}}"/>
+                    </Grid>
+
+                    <Label Text="Cliente:" FontAttributes="Bold"/>
+                    <Entry Text="{Binding Cliente}" 
+                           Placeholder="Nombre del cliente"
+                           IsEnabled="{Binding SinDatosCliente, Converter={StaticResource InverseBooleanConverter}}"/>
+
+                    <Label Text="Dirección:" FontAttributes="Bold"/>
+                    <Entry Text="{Binding Direccion}" 
+                           Placeholder="Dirección del cliente"
+                           IsEnabled="{Binding SinDatosCliente, Converter={StaticResource InverseBooleanConverter}}"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Importe y fecha -->
+            <Frame>
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Importe Total:" FontAttributes="Bold"/>
+                    <Label Text="{Binding ImporteTotal, StringFormat='S/ {0:F2}'}"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource SecondaryColor}"/>
+
+                    <Label Text="Fecha Emisión:" FontAttributes="Bold"/>
+                    <Label Text="{Binding FechaEmision, StringFormat='{0:dd/MM/yyyy HH:mm}'}"
+                           FontAttributes="Bold"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Observación -->
+            <Frame>
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Observación:" FontAttributes="Bold"/>
+                    <Editor Text="{Binding Observacion}" 
+                            HeightRequest="80"
+                            Placeholder="Ingrese observaciones"
+                            AutoSize="TextChanges"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Botones -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,10,0,0">
+                <Button Text="Guardar"
+                        Clicked="OnGuardarClicked"
+                        BackgroundColor="{StaticResource SecondaryColor}"/>
+                <Button Text="Cancelar"
+                        Grid.Column="1"
+                        Clicked="OnCancelarClicked"
+                        BackgroundColor="{StaticResource DangerColor}"/>
+            </Grid>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
