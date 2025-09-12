@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="sistemaPlaya.Pages.CambiarPlanPage"
+             Title="Cambiar Plan">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+            <Label Text="Cambiar tipo de plan" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center"/>
+
+            <Frame>
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Tipo actual:" FontAttributes="Bold"/>
+                    <Label x:Name="CurrentTipoLabel" FontAttributes="Bold"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <Frame>
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Nuevo tipo:" FontAttributes="Bold"/>
+                    <Picker x:Name="PickerNuevoTipo" Title="Seleccione nuevo tipo"/>
+                    <Label Text="Tarifa seleccionada:" FontAttributes="Bold"/>
+                    <Label x:Name="TarifaLabel" FontAttributes="Bold" TextColor="Green"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                <Button Text="Cancelar" Grid.Column="0" Clicked="OnCancelarClicked"/>
+                <Button Text="Cambiar Plan" Grid.Column="1" Clicked="OnCambiarPlanClicked" BackgroundColor="#4CAF50" TextColor="White"/>
+            </Grid>
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

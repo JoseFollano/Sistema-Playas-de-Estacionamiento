@@ -97,6 +97,10 @@
                 <Button x:Name="btnConsultarVehiculo" Grid.Row="0" Grid.Column="1" Text="Consultar Vehículo" Clicked="OnConsultarVehiculoClicked"
                         BackgroundColor="{StaticResource Blue}" TextColor="White" CornerRadius="10" HeightRequest="60"/>
             </Grid>
+
+            <!-- Tercera fila: Ver Vehículos -->
+            <Button x:Name="btnVerVehiculos" Text="Ver Vehículos" Clicked="OnVerVehiculosClicked"
+                    BackgroundColor="{StaticResource Primary}" TextColor="White" CornerRadius="10" HeightRequest="60" Margin="0,10,0,0"/>
         </VerticalStackLayout>
 
         <Button x:Name="btnCerrarSesion" Grid.Row="3" Text="Cerrar Sesión" Clicked="OnCerrarSesionClicked"

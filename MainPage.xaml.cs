@@ -232,5 +232,20 @@ namespace sistemaPlaya
                 Application.Current.MainPage = new LoginPage(); // Regresa a la pantalla de login
             }
         }
+
+        private async void OnVerVehiculosClicked(object sender, EventArgs e)
+        {
+            // Navegar a la página VerVehiculosPage creada en Pages
+            try
+            {
+                await Navigation.PushAsync(new VerVehiculosPage());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al navegar a VerVehiculosPage: {ex.Message}");
+                await DisplayAlert("Error", $"No se pudo abrir VerVehiculosPage: {ex.Message}", "OK");
+            }
+        }
+
     }
 }

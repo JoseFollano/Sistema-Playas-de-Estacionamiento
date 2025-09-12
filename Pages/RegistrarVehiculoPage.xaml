@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:conv="clr-namespace:sistemaPlaya.Converters"
              x:Class="sistemaPlaya.Pages.RegistrarVehiculoPage"
              Title="Playa de Estacionamiento">
     <ContentPage.Resources>
@@ -48,6 +49,8 @@
             <Style x:Key="DangerButton" TargetType="Button">
                 <Setter Property="BackgroundColor" Value="{StaticResource DangerColor}" />
             </Style>
+
+            <conv:RegistrarButtonColorConverter x:Key="RegistrarButtonColorConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -139,6 +142,8 @@
             <Grid ColumnDefinitions="*, *, *" ColumnSpacing="10">
                 <Button Text="Registrar" 
                         Style="{StaticResource SuccessButton}"
+                        IsEnabled="{Binding RegistrarHabilitado}"
+                        BackgroundColor="{Binding RegistrarHabilitado, Converter={StaticResource RegistrarButtonColorConverter}}"
                         Clicked="OnRegistrarClicked"/>
                 <Button Text="Cambiar Plan" 
                         Grid.Column="1"

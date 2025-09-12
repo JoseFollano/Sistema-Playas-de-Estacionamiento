@@ -1,5 +1,4 @@
-﻿
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Microsoft.Maui.Graphics;
@@ -165,6 +164,21 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
         set { _fechaIngreso = value; OnPropertyChanged(); }
     }
 
+    // Control de número de ticket secuencial
+    private int _contadorTicket = 0;
+    private string _ultimoTicketRegistrado = null;
+
+    // Bandera para saber si se cambió el plan antes de pagar
+    private bool _planCambiado = false;
+
+    // Propiedad para habilitar/deshabilitar el botón Registrar
+    private bool _registrarHabilitado = true;
+    public bool RegistrarHabilitado
+    {
+        get => _registrarHabilitado;
+        set { _registrarHabilitado = value; OnPropertyChanged(); }
+    }
+
     public RegistrarVehiculoPage()
     {
         InitializeComponent();
@@ -188,26 +202,21 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
             EstadoIngresoColor = Colors.Black;
             MostrarPago = false;
             TipoVehiculo = null;
+            RegistrarHabilitado = true;
         }
         else if (_vehiculosEnPlaya.ContainsKey(Placa.ToUpper()))
         {
             EstadoIngreso = "SALIDA DE VEHÍCULO";
             EstadoIngresoColor = Colors.Orange;
             MostrarPago = true;
-
-            // Calcular tiempo y total
             var vehiculo = _vehiculosEnPlaya[Placa.ToUpper()];
             var tiempo = DateTime.Now - vehiculo.HoraIngreso;
             TiempoEstacionado = $"{tiempo.Hours}h {tiempo.Minutes}m";
-
             var horas = (decimal)Math.Ceiling(tiempo.TotalHours);
             TotalPagar = horas * vehiculo.TarifaHora;
-
-
-            // Mostrar la observación existente si hay
             Observacion = vehiculo.Observacion;
-            // Aqui se actualiza el tipo de vehiculo registrado originalmente
             TipoVehiculo = vehiculo.Tipo;
+            RegistrarHabilitado = false; // Deshabilitar botón Registrar si ya está registrado
         }
         else
         {
@@ -216,6 +225,7 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
             MostrarPago = false;
             Observacion = ""; // Limpiar observación para nuevos ingresos
             TipoVehiculo = null; // Limpiar tipo de vehículo para nuevos ingresos
+            RegistrarHabilitado = true;
         }
     }
 
@@ -247,6 +257,20 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
             return;
         }
 
+        // Si el vehículo ya está registrado y el botón está habilitado (tras cambiar plan)
+        if (_vehiculosEnPlaya.ContainsKey(Placa.ToUpper()) && RegistrarHabilitado)
+        {
+            var vehiculo = _vehiculosEnPlaya[Placa.ToUpper()];
+            vehiculo.Tipo = TipoVehiculo;
+            vehiculo.TarifaHora = TarifaHora;
+            vehiculo.Observacion = Observacion;
+            // Actualizar la información mostrada
+            ActualizarEstadoIngreso();
+            await DisplayAlert("Éxito", "Actualización exitosa: el plan y la tarifa han sido actualizados.", "OK");
+            RegistrarHabilitado = false;
+            return;
+        }
+
         if (_vehiculosEnPlaya.ContainsKey(Placa.ToUpper()))
         {
             // Salida de vehículo
@@ -264,7 +288,8 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
             {
                 _vehiculosEnPlaya.Remove(Placa.ToUpper());
                 Ocupados--;
-
+                NumeroTicket = null;
+                _ultimoTicketRegistrado = null;
                 await DisplayAlert("Éxito", "Salida de vehículo registrada correctamente", "OK");
                 LimpiarFormulario();
             }
@@ -279,9 +304,15 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
                 return;
             }
 
+            // Generar número de ticket secuencial
+            _contadorTicket++;
+            var ticketSecuencial = _contadorTicket.ToString("D6");
+            NumeroTicket = ticketSecuencial;
+            _ultimoTicketRegistrado = ticketSecuencial;
+
             _vehiculosEnPlaya[Placa.ToUpper()] = new VehiculoInfo
             {
-                NumeroTicket = Guid.NewGuid().ToString().Substring(0, 8), // Ejemplo simple
+                NumeroTicket = ticketSecuencial,
                 HoraIngreso = DateTime.Now,
                 TarifaHora = TarifaHora,
                 Tipo = TipoVehiculo,
@@ -293,18 +324,32 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
             await DisplayAlert("Éxito",
                 $"Ingreso de vehículo registrado correctamente\n" +
                 $"Placa: {Placa}\nTipo: {TipoVehiculo}\n" +
-                $"Hora ingreso: {DateTime.Now:HH:mm}",
+                $"Hora ingreso: {DateTime.Now:HH:mm}\nTicket: {ticketSecuencial}",
                 "OK");
 
             LimpiarFormulario();
         }
     }
 
-    // ✅ Cambiar plan → abre el picker de tipos de vehículo
-    private void OnCambiarPlanClicked(object sender, EventArgs e)
+    // ✅ Cambiar plan → abre la página modal para seleccionar nuevo tipo y tarifa
+    private async void OnCambiarPlanClicked(object sender, EventArgs e)
     {
-        PickerTipoVehiculo.Focus();
-
+        var cambiarPage = new CambiarPlanPage(TipoVehiculo, _tarifasPorTipo);
+        cambiarPage.OnPlanCambiado += (nuevoTipo, nuevaTarifa) =>
+        {
+            TipoVehiculo = nuevoTipo;
+            TarifaHora = nuevaTarifa;
+            if (!string.IsNullOrWhiteSpace(Placa) && _vehiculosEnPlaya.ContainsKey(Placa.ToUpper()))
+            {
+                var placaKey = Placa.ToUpper();
+                var veh = _vehiculosEnPlaya[placaKey];
+                veh.Tipo = nuevoTipo;
+                veh.TarifaHora = nuevaTarifa;
+            }
+            _planCambiado = true;
+            RegistrarHabilitado = true; // Habilitar botón Registrar tras cambiar plan
+        };
+        await Navigation.PushModalAsync(cambiarPage);
     }
 
     // ✅ Anular operación actual
@@ -313,6 +358,13 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
         bool confirmar = await DisplayAlert("Confirmar", "¿Desea anular la operación actual?", "Sí", "No");
         if (confirmar)
         {
+            // Si se anuló un registro recién hecho, restar el contador y limpiar ticket
+            if (!string.IsNullOrEmpty(_ultimoTicketRegistrado) && NumeroTicket == _ultimoTicketRegistrado)
+            {
+                _contadorTicket = Math.Max(0, _contadorTicket - 1);
+                NumeroTicket = null;
+                _ultimoTicketRegistrado = null;
+            }
             LimpiarFormulario();
         }
     }
@@ -320,39 +372,53 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
     // ✅ Pagar y finalizar
     private async void OnPagarClicked(object sender, EventArgs e)
     {
-        if (_vehiculosEnPlaya.ContainsKey(Placa.ToUpper()))
+        if (_vehiculosEnPlaya.ContainsKey(Placa?.ToUpper()))
         {
             var vehiculo = _vehiculosEnPlaya[Placa.ToUpper()];
-
+            string mensaje;
+            if (_planCambiado)
+            {
+                mensaje = "Registro exitoso";
+                _planCambiado = false;
+            }
+            else
+            {
+                mensaje = "Salida de vehículo registrada correctamente";
+            }
             await DisplayAlert("Pago realizado",
                 $"Pago de S/. {TotalPagar:F2} realizado exitosamente.\n" +
                 $"Placa: {Placa}\nTipo: {vehiculo.Tipo}\n" +
                 $"Observación: {vehiculo.Observacion}\n" +
-                $"Vehículo retirado.",
+                mensaje,
                 "OK");
-
             _vehiculosEnPlaya.Remove(Placa.ToUpper());
             Ocupados--;
+            NumeroTicket = null;
+            _ultimoTicketRegistrado = null;
             LimpiarFormulario();
         }
-    }
-
-    private void LimpiarFormulario()
-    {
-        Placa = string.Empty;
-        TipoVehiculo = null;
-        Observacion = string.Empty;
-        MostrarPago = false;
-    }
+    }       
 
     private async void OnFacturaClicked(object sender, EventArgs e)
     {
-        await Navigation.PushModalAsync(new ModalPagoPage(this, NumeroTicket, TotalPagar));
+        await Navigation.PushModalAsync(new ModalPagoPage(this, "Factura", TotalPagar));
     }
 
     private async void OnBoletaClicked(object sender, EventArgs e)
     {
-        await Navigation.PushModalAsync(new ModalPagoPage(this, NumeroTicket, TotalPagar));
+        await Navigation.PushModalAsync(new ModalPagoPage(this, "Boleta", TotalPagar));
+    }
+
+    private void LimpiarFormulario()
+    {
+        Placa = "";
+        EstadoIngreso = "";
+        Observacion = "";
+        TipoVehiculo = null;
+        Ocupados = Math.Max(Ocupados, 0); // Asegurarse de que no sea negativo
+        // No limpiar TarifaHora ni TotalPagar, ya que pueden ser necesarios para el siguiente registro
+        // Limpiar también el campo de tiempo estacionado
+        TiempoEstacionado = "";
     }
 
     public event PropertyChangedEventHandler PropertyChanged;
@@ -363,10 +429,9 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
     }
 }
 
-// Clase para almacenar información del vehículo
 public class VehiculoInfo
 {
-    public string NumeroTicket { get; set; } // ← Añade esta línea
+    public string NumeroTicket { get; set; }
     public DateTime HoraIngreso { get; set; }
     public decimal TarifaHora { get; set; }
     public string Tipo { get; set; }
