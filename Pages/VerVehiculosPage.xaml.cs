@@ -59,7 +59,7 @@ public partial class VerVehiculosPage : ContentPage
         await DisplayAlert("Exportar", "Exportación de datos en desarrollo.", "OK");
     }
 }
-
+// este es un commentario de prueba
 public class VehiculoSalidaInfo
 {
     public string Codigo { get; set; }

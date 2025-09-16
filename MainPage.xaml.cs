@@ -9,9 +9,11 @@ namespace sistemaPlaya
 {
     public partial class MainPage : ContentPage
     {
-        public MainPage()
+        public MainPage(string nombreUsuario)
         {
             InitializeComponent();
+            UserNameLabel.Text = nombreUsuario;
+            
         }
 
         protected override void OnAppearing()

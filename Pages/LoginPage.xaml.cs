@@ -1,22 +1,14 @@
+using System;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
-using Microsoft.Maui.Storage;
-using System;
 
 namespace sistemaPlaya
 {
-    public class LoginResponse
-    {
-        public int IdUsuario { get; set; }
-        public string Usuario { get; set; }
-        public string Nombre { get; set; }
-    }
-
     public partial class LoginPage : ContentPage
     {
-        // private const string BaseApiUrl = "https://localhost:7282/"; // <--- AJUSTA ESTA URL CUANDO TENGAS LAS APIS
+        private readonly HttpClient _httpClient = new HttpClient();
 
         public LoginPage()
         {
@@ -25,78 +17,45 @@ namespace sistemaPlaya
 
         private async void OnLoginButtonClicked(object sender, EventArgs e)
         {
-            string username = UsernameEntry.Text;
-            string password = PasswordEntry.Text;
+            LoadingIndicator.IsVisible = true;
+            LoadingIndicator.IsRunning = true;
+            LoginButton.IsEnabled = false;
 
-            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+            var usuario = UsernameEntry.Text?.Trim();
+            var clave = PasswordEntry.Text;
+
+            if (string.IsNullOrEmpty(usuario) || string.IsNullOrEmpty(clave))
             {
-                await DisplayAlert("Error", "Por favor, ingrese usuario y contraseña.", "OK");
+                await DisplayAlert("Error", "Ingrese usuario y contraseña.", "OK");
+                ResetLoadingState();
                 return;
             }
 
-            // Deshabilita el botón y muestra el indicador de carga
-            LoginButton.IsEnabled = false;
-            LoadingIndicator.IsRunning = true;
-            LoadingIndicator.IsVisible = true;
-
             try
             {
-                // SIMULACIÓN DE LOGIN SIN API - PARA PRUEBAS LOCALES
-                await Task.Delay(1000); // Simular tiempo de carga
-
-                // Validación básica para pruebas (sin API)
-                if (!string.IsNullOrEmpty(username))
+                var url = $"https://localhost:7211/ValidarUsuario?nombreUsuario={Uri.EscapeDataString(usuario)}&clave={Uri.EscapeDataString(clave)}";
+                var response = await _httpClient.GetAsync(url);
+                if (response.IsSuccessStatusCode)
                 {
-                    await DisplayAlert("Login Exitoso", $"Bienvenido, {username}!", "OK");
-
-                    // Guardar datos de sesión simulados
-                    Preferences.Set("IdUsuario", 1);
-                    Preferences.Set("UsuarioNombre", username);
-
-                    // Navega a la pantalla principal
-                    Application.Current.MainPage = new NavigationPage(new MainPage());
-                }
-                else
-                {
-                    await DisplayAlert("Error de Login", "Usuario o contraseña incorrectos.", "OK");
-                }
-
-                /* DESCOMENTAR CUANDO TENGAS LAS APIS
-                using (HttpClient client = new HttpClient())
-                {
-                    // Construye la URL completa del endpoint de validación
-                    string requestUrl = $"{BaseApiUrl}ValidarUsuario?nombreUsuario={username}&clave={password}";
-
-                    HttpResponseMessage response = await client.GetAsync(requestUrl);
-
-                    if (response.IsSuccessStatusCode)
+                    var json = await response.Content.ReadAsStringAsync();
+                    var usuarioInfo = JsonSerializer.Deserialize<UsuarioInfo>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    if (usuarioInfo != null && usuarioInfo.IdUsuario > 0)
                     {
-                        string jsonResponse = await response.Content.ReadAsStringAsync();
-                        LoginResponse loginData = JsonSerializer.Deserialize<LoginResponse>(jsonResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                        Preferences.Set("UsuarioNombre", usuarioInfo.Nombre);
+                        Preferences.Set("IdUsuario", usuarioInfo.IdUsuario);
 
-                        // idUsuario > 0 indica un login válido
-                        if (loginData != null && loginData.IdUsuario > 0)
-                        {
-                            await DisplayAlert("Login Exitoso", $"Bienvenido, {loginData.Nombre}!", "OK");
-
-                            Preferences.Set("IdUsuario", loginData.IdUsuario);
-                            Preferences.Set("UsuarioNombre", loginData.Nombre);
-
-                            // Navega a la pantalla principal
-                            Application.Current.MainPage = new NavigationPage(new MainPage());
-                        }
-                        else
-                        {
-                            await DisplayAlert("Error de Login", "Usuario o contraseña incorrectos. Por favor, verifique sus credenciales.", "OK");
-                        }
+                        await DisplayAlert("Bienvenido", $"Hola {usuarioInfo.Nombre}", "OK");
+                        await Navigation.PushAsync(new MainPage(usuarioInfo.Nombre));
                     }
                     else
                     {
-                        string errorContent = await response.Content.ReadAsStringAsync();
-                        await DisplayAlert("Error de API", $"No se pudo validar el usuario. Código: {response.StatusCode}. Detalle: {errorContent}", "OK");
+                        await DisplayAlert("Error", "Usuario o contraseña incorrectos.", "OK");
                     }
                 }
-                */
+                else
+                {
+                    await DisplayAlert("Error", "No se pudo conectar al servidor.", "OK");
+                }
             }
             catch (Exception ex)
             {
@@ -104,10 +63,22 @@ namespace sistemaPlaya
             }
             finally
             {
-                LoadingIndicator.IsRunning = false;
-                LoadingIndicator.IsVisible = false;
-                LoginButton.IsEnabled = true;
+                ResetLoadingState();
             }
         }
+
+        private void ResetLoadingState()
+        {
+            LoadingIndicator.IsVisible = false;
+            LoadingIndicator.IsRunning = false;
+            LoginButton.IsEnabled = true;
+        }
+    }
+
+    public class UsuarioInfo
+    {
+        public int IdUsuario { get; set; }
+        public string Usuario { get; set; }
+        public string Nombre { get; set; }
     }
 }
