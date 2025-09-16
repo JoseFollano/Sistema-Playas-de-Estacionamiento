@@ -42,7 +42,7 @@ namespace sistemaPlaya
             _idUsuario = Preferences.Get("IdUsuario", 0);
             _nombreUsuario = Preferences.Get("UsuarioNombre", string.Empty);
             _cajaAbiertaId = Preferences.Get("CajaAbiertaId", 0);
-            _cajaAbiertaCodigo = Preferences.Get("CajaAbiertaCodigo", string.Empty);
+            _cajaAbiertaCodigo = Preferences.Get("CajaAbiertaId", 0).ToString(); // Mostrar el ID de la caja
             _importeInicio = Preferences.Get("CajaImporteInicio", 0.0);
 
             if (_cajaAbiertaId == 0 || _idUsuario == 0 || string.IsNullOrEmpty(_nombreUsuario))
@@ -52,12 +52,20 @@ namespace sistemaPlaya
                 return;
             }
 
-            CajaAbiertaLabel.Text = $"Caja: {_cajaAbiertaCodigo} - Usuario: {_nombreUsuario}";
+            CajaAbiertaLabel.Text = $"Caja: {_cajaAbiertaId} - Usuario: {_nombreUsuario}";
             FechaCierreDatePicker.Date = DateTime.Now;
         }
 
         private async void OnCerrarCajaClicked(object sender, EventArgs e)
         {
+            // Verificar que haya caja abierta
+            int cajaAbiertaId = Preferences.Get("CajaAbiertaId", 0);
+            if (cajaAbiertaId == 0)
+            {
+                await DisplayAlert("Error", "No hay una caja abierta para cerrar.", "OK");
+                return;
+            }
+
             if (!double.TryParse(ImporteRecaudadoEntry.Text, out double totalCobrado) || totalCobrado < 0)
             {
                 await DisplayAlert("Error", "Por favor, ingrese un importe recaudado válido (mayor o igual a cero).", "OK");
@@ -78,80 +86,28 @@ namespace sistemaPlaya
 
             try
             {
-                // SIMULACIÓN SIN API
-                await Task.Delay(1500); // Simular tiempo de procesamiento
-
-                // Generar datos simulados de movimientos
-                var movimientos = GenerarMovimientosSimulados();
-
-                // Recuperar el importe inicial
-                double importeInicio = ObtenerImporteInicialDeMovimientos(movimientos);
-
-                // Calcular totales
-                var totales = CalcularTotales(movimientos);
-                double totalCobradoSistema = totales.TotalCobrado;
-                double totalAnulado = totales.TotalAnulado;
-
-                // Simular cierre exitoso
-                await DisplayAlert("Éxito", $"Caja '{_cajaAbiertaCodigo}' cerrada con éxito.", "OK");
-
-                // Generar boleta de cierre con datos simulados
-                string pdfPath = await GenerarBoletaCierre(
-                    movimientos,
-                    importeInicio,
-                    totalCobradoSistema,
-                    totalAnulado,
-                    totalCobrado);
-
-                if (!string.IsNullOrEmpty(pdfPath))
-                {
-                    bool shareReceipt = await DisplayAlert("Boleta de Cierre Generada",
-                        "¿Desea compartir la boleta de cierre?", "Sí", "No");
-
-                    if (shareReceipt)
-                    {
-                        await ShareReceipt(pdfPath);
-                    }
-                }
-
-                // Limpia los datos de la caja abierta de Preferences
-                Preferences.Remove("CajaAbiertaId");
-                Preferences.Remove("CajaAbiertaCodigo");
-                Preferences.Remove("CajaAbiertaEstado");
-                Preferences.Remove("CajaImporteInicio");
-                Preferences.Remove("CajaFechaApertura");
-
-                await Navigation.PopAsync();
-
-                /* DESCOMENTAR CUANDO TENGAS LAS APIS
-                // Obtener detalle de movimientos antes de cerrar
-                var movimientos = await ObtenerDetalleMovimientos();
-
-                // Recuperar el importe inicial del backend
-                double importeInicio = ObtenerImporteInicialDeMovimientos(movimientos);
-
-                // Calcular totales
-                var totales = CalcularTotales(movimientos);
-                double totalCobradoSistema = totales.TotalCobrado;
-                double totalAnulado = totales.TotalAnulado;
-
+                int idEmpresa = 1; // Cambia esto si tu lógica lo requiere
                 using (HttpClient client = new HttpClient())
                 {
-                    string requestUrl = $"{BaseApiUrl}cerrarCaja?" +
-                                        $"idCaja={_cajaAbiertaId}&" +
-                                        $"idUsuario={_idUsuario}&" +
-                                        $"nombreUsuario={Uri.EscapeDataString(_nombreUsuario)}&" +
-                                        $"totalCobrado={totalCobrado}";
-
-                    var content = new StringContent("", Encoding.UTF8, "application/json");
-
-                    HttpResponseMessage response = await client.PostAsync(requestUrl, content);
+                    string url = $"https://localhost:7211/cerrarCaja?idEmpresa={idEmpresa}&idCaja={_cajaAbiertaId}&idUsuario={_idUsuario}&nombreUsuario={Uri.EscapeDataString(_nombreUsuario)}&totalCobrado={totalCobrado}";
+                    var response = await client.PostAsync(url, null);
 
                     if (response.IsSuccessStatusCode)
                     {
+                        // Generar datos simulados de movimientos
+                        var movimientos = GenerarMovimientosSimulados();
+
+                        // Recuperar el importe inicial
+                        double importeInicio = ObtenerImporteInicialDeMovimientos(movimientos);
+
+                        // Calcular totales
+                        var totales = CalcularTotales(movimientos);
+                        double totalCobradoSistema = totales.TotalCobrado;
+                        double totalAnulado = totales.TotalAnulado;
+
                         await DisplayAlert("Éxito", $"Caja '{_cajaAbiertaCodigo}' cerrada con éxito.", "OK");
 
-                        // Generar boleta de cierre con el importe inicial correcto
+                        // Generar boleta de cierre con datos simulados
                         string pdfPath = await GenerarBoletaCierre(
                             movimientos,
                             importeInicio,
@@ -185,7 +141,6 @@ namespace sistemaPlaya
                         await DisplayAlert("Error de API (Cerrar Caja)", $"No se pudo cerrar la caja. Código: {response.StatusCode}. Detalle: {errorContent}", "OK");
                     }
                 }
-                */
             }
             catch (Exception ex)
             {

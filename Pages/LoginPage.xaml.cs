@@ -77,6 +77,7 @@ namespace sistemaPlaya
 
     public class UsuarioInfo
     {
+    
         public int IdUsuario { get; set; }
         public string Usuario { get; set; }
         public string Nombre { get; set; }
