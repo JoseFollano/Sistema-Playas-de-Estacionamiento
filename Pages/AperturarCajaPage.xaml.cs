@@ -117,54 +117,7 @@ namespace sistemaPlaya
 
                 await DisplayAlert("Caja Cargada", $"Caja {cajaCargada.Codigo} cargada con éxito. Estado: Abierta.", "OK");
 
-                /* DESCOMENTAR CUANDO TENGAS LAS APIS
-                using (HttpClient client = new HttpClient())
-                {
-                    string requestUrl = $"{BaseApiUrl}cargarCaja?idCaja={idCajaACargar}";
-
-                    HttpResponseMessage response = await client.GetAsync(requestUrl);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        string jsonResponse = await response.Content.ReadAsStringAsync();
-                        CajaResponse cajaCargada = JsonSerializer.Deserialize<CajaResponse>(jsonResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                        if (cajaCargada != null && cajaCargada.IdCaja > 0)
-                        {
-                            if (cajaCargada.Estado == "I")
-                            {
-                                SetLoadedCajaMode(cajaCargada);
-
-                                Preferences.Set("CajaAbiertaId", cajaCargada.IdCaja);
-                                Preferences.Set("CajaAbiertaCodigo", cajaCargada.Codigo?.ToString());
-                                Preferences.Set("CajaAbiertaEstado", cajaCargada.Estado);
-                                Preferences.Set("CajaImporteInicio", cajaCargada.ImporteInicio);
-                                Preferences.Set("CajaFechaApertura", cajaCargada.FechaApertura.ToString("yyyy-MM-dd"));
-                                Preferences.Set("CajaUsuarioId", cajaCargada.IdUsuario);
-                                Preferences.Set("CajaUsuarioNombre", cajaCargada.NombreUsuario ?? cajaCargada.Usuario);
-
-                                await DisplayAlert("Caja Cargada", $"Caja {cajaCargada.Codigo} cargada con éxito. Estado: Abierta.", "OK");
-                            }
-                            else
-                            {
-                                await DisplayAlert("Advertencia", $"La caja {cajaCargada.Codigo} no está abierta. Estado: {cajaCargada.Estado}.", "OK");
-                                SetNewCajaMode();
-                            }
-                        }
-                        else
-                        {
-                            await DisplayAlert("Error", "Caja no encontrada o datos inválidos en la respuesta.", "OK");
-                            SetNewCajaMode();
-                        }
-                    }
-                    else
-                    {
-                        string errorContent = await response.Content.ReadAsStringAsync();
-                        await DisplayAlert("Error de API (Cargar Caja)", $"No se pudo cargar la caja. Código: {response.StatusCode}. Detalle: {errorContent}", "OK");
-                        SetNewCajaMode();
-                    }
-                }
-                */
+                
             }
             catch (Exception ex)
             {
