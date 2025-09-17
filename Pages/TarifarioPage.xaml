@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="sistemaPlaya.TarifarioPage"
+             Title="Tarifario de Vehículos">
+
+    <Grid RowDefinitions="Auto, *, Auto" Padding="20">
+        <VerticalStackLayout Grid.Row="0" Spacing="15">
+            <Label Text="Tarifario de Vehículos"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   TextColor="{StaticResource Primary}"/>
+
+            <BoxView HeightRequest="1" Color="{StaticResource Gray200}" Margin="0,10"/>
+        </VerticalStackLayout>
+
+        <!-- Lista de tarifarios -->
+        <Frame Grid.Row="1" HasShadow="True" CornerRadius="10" Padding="0" Margin="0,10">
+            <Grid>
+                <CollectionView x:Name="TarifariosCollectionView" 
+                                SelectionMode="Single"
+                                SelectionChanged="OnTarifarioSelected">
+                    <CollectionView.Header>
+                        <Grid ColumnDefinitions="*,*,*,*,*,*,*" 
+                              BackgroundColor="{StaticResource Gray100}"
+                              Padding="10,5">
+                            <Label Grid.Column="0" Text="Vehículo" FontAttributes="Bold" VerticalOptions="Center"/>
+                            <Label Grid.Column="1" Text="Hora Incremento" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center"/>
+                            <Label Grid.Column="2" Text="xDía" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center"/>
+                            <Label Grid.Column="3" Text="Hora" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center"/>
+                            <Label Grid.Column="4" Text="Incremento" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center"/>
+                            <Label Grid.Column="5" Text="Noche" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center"/>
+                            <Label Grid.Column="6" Text="Acciones" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Grid>
+                    </CollectionView.Header>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ColumnDefinitions="*,*,*,*,*,*,Auto" 
+                                  Padding="10,8" 
+                                  ColumnSpacing="5">
+                                <Label Grid.Column="0" Text="{Binding TipoVehiculo}" VerticalOptions="Center"/>
+                                <Label Grid.Column="1" Text="{Binding HoraIncremento}" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                <Label Grid.Column="2" Text="{Binding Xdia}" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                <Label Grid.Column="3" Text="{Binding Hora, StringFormat='S/ {0:F2}'}" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                <Label Grid.Column="4" Text="{Binding Incremento}" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                <Label Grid.Column="5" Text="{Binding Noche}" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                <Button Grid.Column="6" Text="✏️" 
+                                        BackgroundColor="{StaticResource Secondary}"
+                                        TextColor="White"
+                                        CornerRadius="5"
+                                        WidthRequest="35"
+                                        HeightRequest="35"
+                                        Clicked="OnEditarTarifarioClicked"
+                                        CommandParameter="{Binding .}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+        </Frame>
+
+        <!-- Botones de acción -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="15" Margin="0,20,0,0">
+            <Button Grid.Column="0" 
+                    x:Name="NuevoButton"
+                    Text="Nuevo" 
+                    Clicked="OnNuevoClicked"
+                    BackgroundColor="{StaticResource Primary}" 
+                    TextColor="White" 
+                    CornerRadius="10" 
+                    HeightRequest="50"/>
+
+            <Button Grid.Column="1" 
+                    x:Name="EliminarButton"
+                    Text="Eliminar" 
+                    Clicked="OnEliminarClicked"
+                    BackgroundColor="{StaticResource Red}" 
+                    TextColor="White" 
+                    CornerRadius="10" 
+                    HeightRequest="50"
+                    IsEnabled="False"/>
+        </Grid>
+    </Grid>
+</ContentPage>

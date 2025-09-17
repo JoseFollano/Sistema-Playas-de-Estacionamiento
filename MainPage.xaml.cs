@@ -110,7 +110,7 @@ namespace sistemaPlaya
             btnAperturarCaja.IsEnabled = cajaAbiertaId == 0;
             btnCerrarCaja.IsEnabled = cajaAbiertaId > 0;
             btnEntradaVehiculo.IsEnabled = true;
-            btnConsultarVehiculo.IsEnabled = true;
+            btnMantenimiento.IsEnabled = true;
         }
 
         private async void OnAperturarCajaClicked(object sender, EventArgs e)
@@ -180,22 +180,20 @@ namespace sistemaPlaya
             await Navigation.PushAsync(new RegistrarVehiculoPage());
         }
 
-        private async void OnConsultarVehiculoClicked(object sender, EventArgs e)
+        private async void OnMantenimientoClicked(object sender, EventArgs e)
         {
-            try
-            {
-                Console.WriteLine("Botón Consultar Vehículo clickeado");
+            string action = await DisplayActionSheet("Opciones de Mantenimiento", "Cancelar", null,
+                "Tarifario", "Parámetros");
 
-                // Navegar a la página de consulta de vehículo
-                // Eliminada la restricción de caja abierta para simulación
-                await Navigation.PushAsync(new ConsultaVehiculoPage());
-
-                Console.WriteLine("Navegación exitosa");
-            }
-            catch (Exception ex)
+            switch (action)
             {
-                Console.WriteLine($"Error: {ex.Message}");
-                await DisplayAlert("Error", $"Error al abrir la página: {ex.Message}", "OK");
+                case "Tarifario":
+                    await Navigation.PushAsync(new TarifarioPage());
+                    break;
+                case "Parámetros":
+                    // Aquí irá la navegación a Parámetros cuando lo implementes
+                    await DisplayAlert("Próximamente", "Página de Parámetros en desarrollo", "OK");
+                    break;
             }
         }
 

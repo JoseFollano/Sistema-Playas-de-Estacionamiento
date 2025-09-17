@@ -90,12 +90,12 @@
                         BackgroundColor="{StaticResource Tertiary}" TextColor="White" CornerRadius="10" HeightRequest="60"/>
             </Grid>
 
-            <!-- Segunda fila: Entrada Vehículo - Consultar Vehículo -->
+            <!-- Segunda fila: Entrada Vehículo - Mantenimiento -->
             <Grid ColumnDefinitions="*,*" RowDefinitions="Auto" ColumnSpacing="15" RowSpacing="15">
                 <Button x:Name="btnEntradaVehiculo" Grid.Row="0" Grid.Column="0" Text="Entrada Vehículo" Clicked="OnEntradaVehiculoClicked"
-                        BackgroundColor="{StaticResource Green}" TextColor="White" CornerRadius="10" HeightRequest="60"/>
-                <Button x:Name="btnConsultarVehiculo" Grid.Row="0" Grid.Column="1" Text="Consultar Vehículo" Clicked="OnConsultarVehiculoClicked"
-                        BackgroundColor="{StaticResource Blue}" TextColor="White" CornerRadius="10" HeightRequest="60"/>
+            BackgroundColor="{StaticResource Green}" TextColor="White" CornerRadius="10" HeightRequest="60"/>
+                <Button x:Name="btnMantenimiento" Grid.Row="0" Grid.Column="1" Text="Mantenimiento" Clicked="OnMantenimientoClicked"
+            BackgroundColor="{StaticResource Orange}" TextColor="White" CornerRadius="10" HeightRequest="60"/>
             </Grid>
 
             <!-- Tercera fila: Ver Vehículos -->
