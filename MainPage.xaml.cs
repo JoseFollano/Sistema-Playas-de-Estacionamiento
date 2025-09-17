@@ -191,8 +191,7 @@ namespace sistemaPlaya
                     await Navigation.PushAsync(new TarifarioPage());
                     break;
                 case "Parámetros":
-                    // Aquí irá la navegación a Parámetros cuando lo implementes
-                    await DisplayAlert("Próximamente", "Página de Parámetros en desarrollo", "OK");
+                    await Navigation.PushAsync(new ParametrosPage());
                     break;
             }
         }

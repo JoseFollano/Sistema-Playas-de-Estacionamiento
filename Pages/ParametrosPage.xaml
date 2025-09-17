@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="sistemaPlaya.ParametrosPage"
+             Title="Parámetros del Sistema">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="20" Padding="20">
+            <Label Text="Configuración de Playa de Estacionamiento"
+                   FontSize="22"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   TextColor="{StaticResource Primary}"/>
+
+            <Frame HasShadow="True" CornerRadius="10" Padding="15">
+                <VerticalStackLayout Spacing="15">
+                    <!-- Min. Tolerancia -->
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="Min. Tolerancia:" FontSize="16" TextColor="{StaticResource Gray900}"/>
+                        <Entry x:Name="MinToleranciaEntry"
+                               Placeholder="Minutos de tolerancia"
+                               Keyboard="Numeric"/>
+                    </VerticalStackLayout>
+
+                    <!-- Nro. Estacionamientos -->
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <VerticalStackLayout Grid.Column="0" Spacing="5">
+                            <Label Text="Nro. Estacionamientos:" FontSize="16" TextColor="{StaticResource Gray900}"/>
+                            <Entry x:Name="NroEstacionamientosEntry"
+                                   Placeholder="Número total de estacionamientos"
+                                   Keyboard="Numeric"/>
+                        </VerticalStackLayout>
+                        <HorizontalStackLayout Grid.Column="1" Spacing="5" VerticalOptions="End">
+                            <CheckBox x:Name="PrecioIncrementadoCheckBox" />
+                            <Label Text="Precio Incrementado" 
+                                   VerticalOptions="Center"
+                                   FontSize="14" 
+                                   TextColor="{StaticResource Gray900}"/>
+                        </HorizontalStackLayout>
+                    </Grid>
+
+                    <!-- Hora Inicio - Hora Fin -->
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="15">
+                        <VerticalStackLayout Grid.Column="0" Spacing="5">
+                            <Label Text="Hora Inicio:" FontSize="16" TextColor="{StaticResource Gray900}"/>
+                            <TimePicker x:Name="HoraInicioPicker" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="5">
+                            <Label Text="Hora Fin:" FontSize="16" TextColor="{StaticResource Gray900}"/>
+                            <TimePicker x:Name="HoraFinPicker" />
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <!-- Tarifa Nocturna -->
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="Tarifa Nocturna (S/):" FontSize="16" TextColor="{StaticResource Gray900}"/>
+                        <Entry x:Name="TarifaNocturnaEntry"
+                               Placeholder="Tarifa para horario nocturno"
+                               Keyboard="Numeric"/>
+                    </VerticalStackLayout>
+
+                    <!-- Texto Ticket Ingreso -->
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="Texto Ticket Ingreso:" FontSize="16" TextColor="{StaticResource Gray900}"/>
+                        <Editor x:Name="TextoTicketIngresoEditor"
+                                HeightRequest="100"
+                                Placeholder="Texto para ticket de ingreso"/>
+                        <Label Text="[@precioVehiculo] -> Precio según el Tipo Vehiculo&#10;[@tolerancia] -> Minutos de Tolerancia"
+                               FontSize="12"
+                               TextColor="{StaticResource Gray600}"/>
+                    </VerticalStackLayout>
+
+                    <!-- Texto Ticket Salida -->
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="Texto Ticket Salida:" FontSize="16" TextColor="{StaticResource Gray900}"/>
+                        <Editor x:Name="TextoTicketSalidaEditor"
+                                HeightRequest="100"
+                                Placeholder="Texto para ticket de salida"/>
+                    </VerticalStackLayout>
+
+                    <!-- Checkboxes -->
+                    <VerticalStackLayout Spacing="10">
+                        <HorizontalStackLayout Spacing="10">
+                            <CheckBox x:Name="ObligatorioCerrarCajaCheckBox" />
+                            <Label Text="Obligatorio Cerrar Caja" 
+                                   VerticalOptions="Center"
+                                   FontSize="16" 
+                                   TextColor="{StaticResource Gray900}"/>
+                        </HorizontalStackLayout>
+
+                        <HorizontalStackLayout Spacing="10">
+                            <CheckBox x:Name="MostrarPantallaDarVueltoCheckBox" />
+                            <Label Text="Mostrar Pantalla DAR VUELTO" 
+                                   VerticalOptions="Center"
+                                   FontSize="16" 
+                                   TextColor="{StaticResource Gray900}"/>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+
+                    <!-- Dirección -->
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="Dirección:" FontSize="16" TextColor="{StaticResource Gray900}"/>
+                        <Entry x:Name="DireccionEntry"
+                               Placeholder="Dirección de la playa"/>
+                    </VerticalStackLayout>
+
+                    <!-- Impresoras -->
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Configuración de Impresoras:" 
+                               FontSize="16" 
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource Gray900}"/>
+
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="Nombre Impresora Ingresos:" FontSize="14" TextColor="{StaticResource Gray900}"/>
+                            <Entry x:Name="ImpresoraIngresosEntry"
+                                   Placeholder="Nombre de la impresora de ingresos"/>
+                        </VerticalStackLayout>
+
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <VerticalStackLayout Grid.Column="0" Spacing="5">
+                                <Label Text="Nombre Impresora Salida:" FontSize="14" TextColor="{StaticResource Gray900}"/>
+                                <Entry x:Name="ImpresoraSalidaEntry"
+                                       Placeholder="Nombre de la impresora de salida"/>
+                            </VerticalStackLayout>
+                            <HorizontalStackLayout Grid.Column="1" Spacing="5" VerticalOptions="End">
+                                <CheckBox x:Name="ImprimirDobleTicketCheckBox" />
+                                <Label Text="Imprimir Doble Tickets" 
+                                       VerticalOptions="Center"
+                                       FontSize="12" 
+                                       TextColor="{StaticResource Gray900}"/>
+                            </HorizontalStackLayout>
+                        </Grid>
+
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="Nombre Impresora Caja:" FontSize="14" TextColor="{StaticResource Gray900}"/>
+                            <Entry x:Name="ImpresoraCajaEntry"
+                                   Placeholder="Nombre de la impresora de caja"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="Nombre Impresora Factura:" FontSize="14" TextColor="{StaticResource Gray900}"/>
+                            <Entry x:Name="ImpresoraFacturaEntry"
+                                   Placeholder="Nombre de la impresora de facturas"/>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+
+                    <!-- Tarifa Plana -->
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <VerticalStackLayout Grid.Column="0" Spacing="5">
+                            <Label Text="Tarifa Plana:" FontSize="16" TextColor="{StaticResource Gray900}"/>
+                            <Entry x:Name="TarifaPlanaEntry"
+                                   Placeholder="Tarifa plana"
+                                   IsEnabled="False"/>
+                        </VerticalStackLayout>
+                        <Button Grid.Column="1" 
+                                Text="🔍" 
+                                BackgroundColor="{StaticResource Secondary}"
+                                TextColor="White"
+                                CornerRadius="8"
+                                WidthRequest="40"
+                                HeightRequest="40"
+                                VerticalOptions="End"/>
+                    </Grid>
+
+                    <!-- Ancho Tickets -->
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="Ancho tickets:" FontSize="16" TextColor="{StaticResource Gray900}"/>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <Entry Grid.Column="0"
+                                   x:Name="AnchoTicketsEntry"
+                                   Placeholder="Ancho en caracteres"
+                                   Keyboard="Numeric"
+                                   Text="80"/>
+                            <Label Grid.Column="1" 
+                                   Text="50/80"
+                                   VerticalOptions="Center"
+                                   FontSize="14" 
+                                   TextColor="{StaticResource Gray600}"/>
+                        </Grid>
+                    </VerticalStackLayout>
+
+                    <!-- Cierre de Caja Sin Resultado -->
+                    <HorizontalStackLayout Spacing="10">
+                        <CheckBox x:Name="CierreCajaSinResultadoCheckBox" />
+                        <Label Text="Cierre de Caja Sin Resultado" 
+                               VerticalOptions="Center"
+                               FontSize="16" 
+                               TextColor="{StaticResource Gray900}"/>
+                    </HorizontalStackLayout>
+
+                    <!-- Tolerancia Inicio de Ingreso -->
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="Tolerancia Inicio de Ingreso Min:" FontSize="16" TextColor="{StaticResource Gray900}"/>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <Entry Grid.Column="0"
+                                   x:Name="ToleranciaInicioIngresoEntry"
+                                   Placeholder="Minutos de tolerancia"
+                                   Keyboard="Numeric"/>
+                            <Label Grid.Column="1" 
+                                   Text="Ideal para Playas con tolerancia al inicio del parqueo, poner -1 si es el caso"
+                                   VerticalOptions="Center"
+                                   FontSize="12" 
+                                   TextColor="{StaticResource Gray600}"/>
+                        </Grid>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Botón Guardar -->
+            <Button x:Name="GuardarButton"
+                    Text="Guardar Configuración" 
+                    Clicked="OnGuardarClicked"
+                    BackgroundColor="{StaticResource Primary}" 
+                    TextColor="White" 
+                    CornerRadius="10" 
+                    HeightRequest="50"/>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
