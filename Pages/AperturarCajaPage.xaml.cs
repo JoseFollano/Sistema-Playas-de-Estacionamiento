@@ -24,7 +24,7 @@ namespace sistemaPlaya
 
     public partial class AperturarCajaPage : ContentPage
     {
-        // private const string BaseApiUrl = "https://localhost:7282/"; // <--- AJUSTA ESTA URL CUANDO TENGAS LAS APIS
+        private const string BaseApiUrl = "https://localhost:7211/"; // Cambia esto por la URL real de tu API
 
         private int _idUsuario;
         private string _nombreUsuario;
@@ -194,52 +194,39 @@ namespace sistemaPlaya
 
             try
             {
-                // SIMULACIÓN SIN API
-                await Task.Delay(1500); // Simular tiempo de guardado
+                int idEmpresa = Preferences.Get("IdEmpresa", 1); // Ajusta el valor por defecto si es necesario
 
-                // Simulación de guardado de nueva caja
-                int idCajaGenerado = new Random().Next(1000, 9999); // Generar ID aleatorio
-                string codigoCajaGenerado = idCajaGenerado.ToString();
+                // Construir un objeto con valores válidos para evitar problemas de binding en el backend
+                var cajaData = new
+                {
+                    idCaja = 0,
+                    // Enviar una fecha válida en formato ISO 8601 (UTC) para que el model binder del backend pueda parsearla
+                    fechaApertura = DateTime.UtcNow.ToString("o"),
+                    idUsuario = _idUsuario,
+                    importeInicio = importeInicial,
+                    // Puedes dejar estado y nombreUsuario vacíos si el backend los genera, pero enviarlos no causa problema
+                    estado = "I",
+                    nombreUsuario = _nombreUsuario,
+                    nuevo = true
+                };
 
-                // Guardar información de la caja en Preferences
-                Preferences.Set("CajaAbiertaId", idCajaGenerado);
-                Preferences.Set("CajaAbiertaCodigo", codigoCajaGenerado);
-                Preferences.Set("CajaAbiertaEstado", "I");
-                Preferences.Set("CajaImporteInicio", importeInicial);
-                Preferences.Set("CajaFechaApertura", FechaAperturaDatePicker.Date.ToString("yyyy-MM-dd"));
-                Preferences.Set("CajaUsuarioId", _idUsuario);
-                Preferences.Set("CajaUsuarioNombre", _nombreUsuario);
+                var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+                string jsonContent = JsonSerializer.Serialize(cajaData, options);
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                await DisplayAlert("Éxito", $"Caja '{codigoCajaGenerado}' abierta con éxito. Importe inicial: {importeInicial:C}", "OK");
-
-                // Vuelve a la página principal
-                await Navigation.PopAsync();
-
-                /* DESCOMENTAR CUANDO TENGAS LAS APIS
                 using (HttpClient client = new HttpClient())
                 {
-                    var cajaData = new
-                    {
-                        idCaja = 0,
-                        fechaApertura = FechaAperturaDatePicker.Date.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
-                        idUsuario = _idUsuario,
-                        importeInicio = importeInicial,
-                        estado = "I",
-                        nombreUsuario = _nombreUsuario,
-                        nuevo = true
-                    };
+                    string requestUrl = $"{BaseApiUrl}guardarCaja?idEmpresa={idEmpresa}";
 
-                    string jsonContent = JsonSerializer.Serialize(cajaData);
-                    var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-
-                    HttpResponseMessage response = await client.PostAsync($"{BaseApiUrl}guardarCaja", content);
+                    // Asegurarse de que el Content-Type esté correctamente establecido (StringContent ya lo hace)
+                    HttpResponseMessage response = await client.PostAsync(requestUrl, content);
 
                     if (response.IsSuccessStatusCode)
                     {
                         string jsonResponse = await response.Content.ReadAsStringAsync();
-                        int idCajaGenerado = 0;
 
-                        if (int.TryParse(jsonResponse.Replace("\"", ""), out idCajaGenerado))
+                        // La API devuelve el número (id) como texto; intentamos parsearlo
+                        if (int.TryParse(jsonResponse.Replace("\"", ""), out int idCajaGenerado))
                         {
                             string codigoCajaGenerado = idCajaGenerado.ToString();
 
@@ -247,12 +234,13 @@ namespace sistemaPlaya
                             Preferences.Set("CajaAbiertaCodigo", codigoCajaGenerado);
                             Preferences.Set("CajaAbiertaEstado", "I");
                             Preferences.Set("CajaImporteInicio", importeInicial);
-                            Preferences.Set("CajaFechaApertura", FechaAperturaDatePicker.Date.ToString("yyyy-MM-dd"));
+                            Preferences.Set("CajaFechaApertura", DateTime.UtcNow.ToString("yyyy-MM-dd"));
                             Preferences.Set("CajaUsuarioId", _idUsuario);
                             Preferences.Set("CajaUsuarioNombre", _nombreUsuario);
 
                             await DisplayAlert("Éxito", $"Caja '{codigoCajaGenerado}' abierta con éxito. Importe inicial: {importeInicial:C}", "OK");
 
+                            // Vuelve a la página principal
                             await Navigation.PopAsync();
                         }
                         else
@@ -266,7 +254,6 @@ namespace sistemaPlaya
                         await DisplayAlert("Error de API (Guardar Caja)", $"No se pudo guardar la caja. Código: {response.StatusCode}. Detalle: {errorContent}", "OK");
                     }
                 }
-                */
             }
             catch (Exception ex)
             {
