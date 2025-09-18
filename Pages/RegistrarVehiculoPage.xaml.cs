@@ -2,6 +2,10 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Microsoft.Maui.Graphics;
+using System.Net.Http;
+using System.Text.Json;
+using Microsoft.Maui.Storage;
+
 namespace sistemaPlaya.Pages;
 
 public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
@@ -9,7 +13,7 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
     // Diccionario para controlar vehículos en playa
     private Dictionary<string, VehiculoInfo> _vehiculosEnPlaya = new();
 
-    // Tarifas por tipo de vehículo
+    // Tarifas por tipo de vehículo (fallback local)
     private Dictionary<string, decimal> _tarifasPorTipo = new Dictionary<string, decimal>
     {
         { "Automóvil", 5.00m },
@@ -18,6 +22,12 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
         { "Furgón", 12.00m },
         { "Moto", 3.00m }
     };
+
+    private readonly HttpClient _httpClient = new();
+    private readonly string _baseApi = "https://localhost:7211/"; // ajustar si es necesario
+
+    // Mapeo de códigos de tipo (p. ej. "0001") a texto mostrado (p. ej. "AUTOMOVIL")
+    private readonly Dictionary<string, string> _mapaTipoCodigoADisplay = new();
 
     private string _estadoCaja = "ABIERTA";
     public string EstadoCaja
@@ -55,6 +65,11 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
             _placa = value;
             OnPropertyChanged();
             ActualizarEstadoIngreso();
+            // Validar automáticamente si la placa tiene 6 caracteres
+            if (!string.IsNullOrWhiteSpace(_placa) && _placa.Length == 6)
+            {
+                _ = VerificarPlacaAsync();
+            }
         }
     }
 
@@ -80,8 +95,8 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
         }
     }
 
-    public ObservableCollection<string> TiposVehiculo { get; set; } =
-        new() { "Automóvil", "Camioneta", "Combi", "Furgón", "Moto" };
+    // Inicialmente vacío; se cargará desde la API getComboTipoVehiculos
+    public ObservableCollection<string> TiposVehiculo { get; set; } = new();
 
     private string _tipoVehiculo;
     public string TipoVehiculo
@@ -184,7 +199,14 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
         InitializeComponent();
         BindingContext = this;
 
-        // Agregar algunos vehículos de ejemplo para probar la funcionalidad
+        // Mostrar estado de caja según Preferences (igual que MainPage)
+        int idCaja = Preferences.Get("CajaAbiertaId", 0);
+        EstadoCaja = idCaja > 0 ? $"ABIERTA (ID: {idCaja})" : "CERRADA";
+
+        // Cargar tipos de vehiculo desde la API (no bloquear constructor)
+        _ = LoadTiposVehiculoAsync();
+
+        // Agregar algunos vehículos de ejemplo para probar la funcionalidad localmente
         _vehiculosEnPlaya["ABC123"] = new VehiculoInfo
         {
             HoraIngreso = DateTime.Now.AddHours(-2),
@@ -206,6 +228,7 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
         }
         else if (_vehiculosEnPlaya.ContainsKey(Placa.ToUpper()))
         {
+            // Si está en el diccionario local
             EstadoIngreso = "SALIDA DE VEHÍCULO";
             EstadoIngresoColor = Colors.Orange;
             MostrarPago = true;
@@ -220,6 +243,8 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
         }
         else
         {
+            // Si no está localmente, esperar a que el usuario complete la placa y luego
+            // se hará una verificación contra la API en OnPlacaCompleted.
             EstadoIngreso = "INGRESO DE VEHÍCULO";
             EstadoIngresoColor = Colors.Green;
             MostrarPago = false;
@@ -237,17 +262,130 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
         }
         else
         {
-            TarifaHora = 0;
+            // Si tenemos un tipo seleccionado que proviene de la API y no está en _tarifasPorTipo,
+            // no cambiar la tarifa aquí: la tarifa puede venir desde la validación de placa.
+            TarifaHora = TarifaHora; // no-op para evitar reset
         }
     }
 
-    private void OnPlacaCompleted(object sender, EventArgs e)
+    private async void OnPlacaCompleted(object sender, EventArgs e)
     {
-        // Enfocar el picker de tipo de vehículo después de ingresar la placa
-        PickerTipoVehiculo.Focus();
+        // Ya no es necesario validar aquí, solo enfocar el picker
+        PickerTipoVehiculo?.Focus();
     }
 
-    // ✅ Registrar ingreso o salida
+    // Verifica la placa contra la API ValidaPlacaExiste
+    private async Task VerificarPlacaAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Placa))
+            return;
+
+        try
+        {
+            // Obtener idUsuario desde Preferences
+            int idUsuario = Preferences.Get("IdUsuario", 0);
+            if (idUsuario == 0)
+            {
+                await DisplayAlert("Error", "No se encontró el usuario. Debe iniciar sesión nuevamente.", "OK");
+                return;
+            }
+            // Llamada a la API con idUsuario real (corregido: sin espacio en ValidaPlacaExiste)
+            var placaEsc = Uri.EscapeDataString(Placa);
+            var url = $"{_baseApi}ValidaPlacaExiste?placa={placaEsc}&idUsuario={idUsuario}";
+            var resp = await _httpClient.GetAsync(url);
+            if (!resp.IsSuccessStatusCode)
+            {
+                // Si no responde bien, dejar el estado como ingreso
+                return;
+            }
+
+            var json = await resp.Content.ReadAsStringAsync();
+            var opciones = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var data = JsonSerializer.Deserialize<ValidaPlacaResponse>(json, opciones);
+
+            if (data == null)
+                return;
+
+            // Si la API indica que está parqueado o modo es salida, mostrar datos de salida
+            if ((data.Parqueado?.ToUpper() == "S") || (data.Modo?.ToLower().Contains("salida") == true))
+            {
+                // Mapear datos al UI
+                EstadoIngreso = "SALIDA DE VEHÍCULO";
+                EstadoIngresoColor = Colors.Orange;
+                MostrarPago = true;
+                TiempoEstacionado = data.Tiempo ?? "";
+                // Usar totalCobrar si viene o calcular con precio
+                TotalPagar = data.TotalCobrar != 0 ? data.TotalCobrar : data.Precio * 1; // fallback
+                Observacion = data.Observacion ?? "";
+                NumeroTicket = data.NroTicket;
+                FechaIngreso = data.FechaIngreso;
+
+                // Traducir código de tipo a display si lo tenemos
+                if (!string.IsNullOrEmpty(data.TipoVehiculo) && _mapaTipoCodigoADisplay.TryGetValue(data.TipoVehiculo, out var display))
+                {
+                    TipoVehiculo = display;
+                }
+                else
+                {
+                    // Si no tenemos el mapeo, dejar el código para referencia
+                    TipoVehiculo = data.TipoVehiculo;
+                }
+
+                RegistrarHabilitado = false;
+            }
+            else
+            {
+                // No está en sistema → ingreso
+                EstadoIngreso = "INGRESO DE VEHÍCULO";
+                EstadoIngresoColor = Colors.Green;
+                MostrarPago = false;
+                Observacion = "";
+                TipoVehiculo = null;
+                RegistrarHabilitado = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            // No bloquear al usuario si falla la llamada
+            System.Diagnostics.Debug.WriteLine($"Error al validar placa: {ex.Message}");
+        }
+    }
+
+    // Cargar tipos de vehiculos desde la API getComboTipoVehiculos
+    private async Task LoadTiposVehiculoAsync()
+    {
+        try
+        {
+            var url = $"{_baseApi}getComboTipoVehiculos?idEmpresa=1";
+            var resp = await _httpClient.GetAsync(url);
+            if (!resp.IsSuccessStatusCode)
+                return;
+
+            var json = await resp.Content.ReadAsStringAsync();
+            var opciones = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var items = JsonSerializer.Deserialize<List<TipoVehiculoItem>>(json, opciones);
+            if (items == null)
+                return;
+
+            // Actualizar colección observable en UI thread
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                TiposVehiculo.Clear();
+                _mapaTipoCodigoADisplay.Clear();
+                foreach (var it in items)
+                {
+                    TiposVehiculo.Add(it.Display);
+                    if (!string.IsNullOrEmpty(it.Value) && !_mapaTipoCodigoADisplay.ContainsKey(it.Value))
+                        _mapaTipoCodigoADisplay[it.Value] = it.Display;
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error al cargar tipos de vehículo: {ex.Message}");
+        }
+    }
+
     private async void OnRegistrarClicked(object sender, EventArgs e)
     {
         if (string.IsNullOrWhiteSpace(Placa) || Placa.Length != 6)
@@ -273,7 +411,7 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
 
         if (_vehiculosEnPlaya.ContainsKey(Placa.ToUpper()))
         {
-            // Salida de vehículo
+            // Salida de vehículo local
             var vehiculo = _vehiculosEnPlaya[Placa.ToUpper()];
             var tiempo = DateTime.Now - vehiculo.HoraIngreso;
             var horas = (decimal)Math.Ceiling(tiempo.TotalHours);
@@ -331,7 +469,6 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
         }
     }
 
-    // ✅ Cambiar plan → abre la página modal para seleccionar nuevo tipo y tarifa
     private async void OnCambiarPlanClicked(object sender, EventArgs e)
     {
         var cambiarPage = new CambiarPlanPage(TipoVehiculo, _tarifasPorTipo);
@@ -352,7 +489,6 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
         await Navigation.PushModalAsync(cambiarPage);
     }
 
-    // ✅ Anular operación actual
     private async void OnAnularClicked(object sender, EventArgs e)
     {
         bool confirmar = await DisplayAlert("Confirmar", "¿Desea anular la operación actual?", "Sí", "No");
@@ -369,7 +505,6 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
         }
     }
 
-    // ✅ Pagar y finalizar
     private async void OnPagarClicked(object sender, EventArgs e)
     {
         if (_vehiculosEnPlaya.ContainsKey(Placa?.ToUpper()))
@@ -436,4 +571,34 @@ public class VehiculoInfo
     public decimal TarifaHora { get; set; }
     public string Tipo { get; set; }
     public string Observacion { get; set; }
+}
+
+// Modelos para deserializar las respuestas de la API
+public class ValidaPlacaResponse
+{
+    public int IdOperacion { get; set; }
+    public string Tiempo { get; set; }
+    public decimal Precio { get; set; }
+    public decimal TotalCobrar { get; set; }
+    public DateTime FechaIngreso { get; set; }
+    public string NroTicket { get; set; }
+    public string Observacion { get; set; }
+    public string TipoVehiculo { get; set; }
+    public string ItemTipoVehiculo { get; set; }
+    public bool Empadronado { get; set; }
+    public string NombreEmpadronado { get; set; }
+    public decimal TotalCompras { get; set; }
+    public string Msj { get; set; }
+    public string Modo { get; set; }
+    public string Parqueado { get; set; }
+    public bool PuedeAnular { get; set; }
+    public bool PuedeCambiar { get; set; }
+    public bool MostrarVentanaVuelto { get; set; }
+}
+
+public class TipoVehiculoItem
+{
+    public string Value { get; set; }
+    public string Display { get; set; }
+    public bool Seleccionado { get; set; }
 }

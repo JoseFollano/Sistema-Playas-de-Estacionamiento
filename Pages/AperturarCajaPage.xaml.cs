@@ -24,7 +24,7 @@ namespace sistemaPlaya
 
     public partial class AperturarCajaPage : ContentPage
     {
-        private const string BaseApiUrl = "https://localhost:7211/"; // Cambia esto por la URL real de tu API
+        private const string BaseApiUrl = "https://localhost:7211/"; 
 
         private int _idUsuario;
         private string _nombreUsuario;

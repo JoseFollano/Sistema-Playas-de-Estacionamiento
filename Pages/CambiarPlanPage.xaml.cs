@@ -1,47 +1,62 @@
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
 
 namespace sistemaPlaya.Pages;
 
 public partial class CambiarPlanPage : ContentPage
 {
-    private readonly Dictionary<string, decimal> _tarifasPorTipo;
+    private List<TipoVehiculoItem> _tiposVehiculo = new();
     public string TipoActual { get; }
-
     public event Action<string, decimal> OnPlanCambiado; // tipo nuevo, tarifa nueva
+    private readonly HttpClient _httpClient = new();
+    private readonly string _baseApi = "https://localhost:7211/";
 
     public CambiarPlanPage(string tipoActual, Dictionary<string, decimal> tarifas)
     {
         InitializeComponent();
-
         TipoActual = tipoActual;
-        _tarifasPorTipo = tarifas ?? new Dictionary<string, decimal>();
-
         CurrentTipoLabel.Text = string.IsNullOrEmpty(TipoActual) ? "(ninguno)" : TipoActual;
-
-        // Llenar picker con tipos
-        PickerNuevoTipo.ItemsSource = new List<string>(_tarifasPorTipo.Keys);
-
-        PickerNuevoTipo.SelectedIndexChanged += PickerNuevoTipo_SelectedIndexChanged;
-
-        // Inicializar tarifa label
         TarifaLabel.Text = "S/. 0.00";
+        _ = LoadTiposVehiculoAsync();
+        PickerNuevoTipo.SelectedIndexChanged += PickerNuevoTipo_SelectedIndexChanged;
+    }
+
+    private async Task LoadTiposVehiculoAsync()
+    {
+        try
+        {
+            var url = $"{_baseApi}getComboTipoVehiculos?idEmpresa=1";
+            var resp = await _httpClient.GetAsync(url);
+            if (!resp.IsSuccessStatusCode)
+                return;
+            var json = await resp.Content.ReadAsStringAsync();
+            var opciones = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var items = JsonSerializer.Deserialize<List<TipoVehiculoItem>>(json, opciones);
+            if (items == null)
+                return;
+            _tiposVehiculo = items;
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                PickerNuevoTipo.ItemsSource = new List<string>(_tiposVehiculo.ConvertAll(x => x.Display));
+            });
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", $"Error al cargar tipos de vehículo: {ex.Message}", "OK");
+        }
     }
 
     private void PickerNuevoTipo_SelectedIndexChanged(object sender, EventArgs e)
     {
         if (PickerNuevoTipo.SelectedIndex >= 0)
         {
-            var tipo = PickerNuevoTipo.Items[PickerNuevoTipo.SelectedIndex];
-            if (_tarifasPorTipo.TryGetValue(tipo, out var tarifa))
-            {
-                TarifaLabel.Text = $"S/. {tarifa:F2}";
-            }
-            else
-            {
-                TarifaLabel.Text = "S/. 0.00";
-            }
+            var display = PickerNuevoTipo.Items[PickerNuevoTipo.SelectedIndex];
+            // Aquí podrías obtener la tarifa de otra API si es necesario
+            TarifaLabel.Text = ""; // No hay tarifa en este endpoint
         }
         else
         {
@@ -61,12 +76,9 @@ public partial class CambiarPlanPage : ContentPage
             await DisplayAlert("Error", "Debe seleccionar un nuevo tipo de vehículo", "OK");
             return;
         }
-
-        var nuevoTipo = PickerNuevoTipo.Items[PickerNuevoTipo.SelectedIndex];
-        if (!_tarifasPorTipo.TryGetValue(nuevoTipo, out var tarifa)) tarifa = 0;
-
-        OnPlanCambiado?.Invoke(nuevoTipo, tarifa);
-
+        var display = PickerNuevoTipo.Items[PickerNuevoTipo.SelectedIndex];
+        var tipoItem = _tiposVehiculo.Find(x => x.Display == display);
+        OnPlanCambiado?.Invoke(display, 0); // Tarifa 0, puedes ajustar si tienes otra fuente
         await Navigation.PopModalAsync();
     }
 }
