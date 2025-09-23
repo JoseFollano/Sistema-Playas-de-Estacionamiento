@@ -390,7 +390,7 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
     {
         if (string.IsNullOrWhiteSpace(Placa) || Placa.Length != 6)
         {
-            await DisplayAlert("Error", "Laplaca deve tener exactamente 6 caracters", "OK");
+            await DisplayAlert("Error", "La placa debe tener exactamente 6 caracteres", "OK");
             EntryPlaca.Focus();
             return;
         }
@@ -434,7 +434,7 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
         }
         else
         {
-            // Ingreso de vehículo
+            // Ingreso de vehículo - INTEGRAR CON LA NUEVA API
             if (string.IsNullOrEmpty(TipoVehiculo))
             {
                 await DisplayAlert("Error", "Debe seleccionar un tipo de vehículo", "OK");
@@ -442,32 +442,133 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
                 return;
             }
 
-            // Generar número de ticket secuencial
-            _contadorTicket++;
-            var ticketSecuencial = _contadorTicket.ToString("D6");
-            NumeroTicket = ticketSecuencial;
-            _ultimoTicketRegistrado = ticketSecuencial;
-
-            _vehiculosEnPlaya[Placa.ToUpper()] = new VehiculoInfo
+            // Llamar a la API de registro de ingreso
+            bool registroExitoso = await RegistrarIngresoEnAPI();
+            if (registroExitoso)
             {
-                NumeroTicket = ticketSecuencial,
-                HoraIngreso = DateTime.Now,
-                TarifaHora = TarifaHora,
-                Tipo = TipoVehiculo,
-                Observacion = Observacion
-            };
+                // Generar número de ticket secuencial (como fallback)
+                _contadorTicket++;
+                var ticketSecuencial = _contadorTicket.ToString("D6");
+                NumeroTicket = ticketSecuencial;
+                _ultimoTicketRegistrado = ticketSecuencial;
 
-            Ocupados++;
+                _vehiculosEnPlaya[Placa.ToUpper()] = new VehiculoInfo
+                {
+                    NumeroTicket = ticketSecuencial,
+                    HoraIngreso = DateTime.Now,
+                    TarifaHora = TarifaHora,
+                    Tipo = TipoVehiculo,
+                    Observacion = Observacion
+                };
 
-            await DisplayAlert("Éxito",
-                $"Ingreso de vehículo registrado correctamente\n" +
-                $"Placa: {Placa}\nTipo: {TipoVehiculo}\n" +
-                $"Hora ingreso: {DateTime.Now:HH:mm}\nTicket: {ticketSecuencial}",
-                "OK");
+                Ocupados++;
 
-            LimpiarFormulario();
+                await DisplayAlert("Éxito", "Ingreso de vehículo registrado correctamente", "OK");
+
+                LimpiarFormulario();
+            }
         }
     }
+
+    // Nuevo método para registrar ingreso en la API
+    private async Task<bool> RegistrarIngresoEnAPI()
+{
+    try
+    {
+        // Obtener datos de la caja abierta desde Preferences
+        int idCaja = Preferences.Get("CajaAbiertaId", 0);
+        int idUsuario = Preferences.Get("IdUsuario", 0);
+            
+            if (idCaja == 0)
+            {
+                await DisplayAlert("Error", "No hay una caja abierta. Debe abrir una caja primero.", "OK");
+                return false;
+            }
+
+            if (idUsuario == 0)
+        {
+            await DisplayAlert("Error", "No se encontró el usuario. Debe iniciar sesión nuevamente.", "OK");
+            return false;
+        }
+
+            string itemTipoVehiculo = "";
+            string itemTipoFraccion = "";
+
+            foreach (var kvp in _mapaTipoCodigoADisplay)
+            {
+                if (kvp.Value == TipoVehiculo)
+                {
+                    itemTipoVehiculo = kvp.Key;
+                    itemTipoFraccion = kvp.Key; // Asumiendo mismo código para ambos
+                    break;
+                }
+            }
+
+            // Preparar datos COMPLETOS para enviar
+            var requestData = new
+            {
+                idLocal = 1, // Usar 1 como en el ejemplo
+                placa = Placa.ToUpper(),
+                tipoVehiculo = TipoVehiculo ?? "",
+                itemTipoVehiculo = itemTipoVehiculo,
+                ocupados = 0,
+                estacionamientos = 0,
+                codCaja = idCaja.ToString(),
+                tarifaFraccion = (double)TarifaHora,
+                regularizacion = false,
+                fechaRegularizacion = DateTime.UtcNow,
+                usuarioLogin = Preferences.Get("UsuarioNombre", "") ?? "",
+                observacion = Observacion ?? "",
+                itemTipoFraccion = itemTipoFraccion,
+                abonadoActivo = false,
+                fechaSalida = (DateTime?)null
+            };
+
+            string jsonContent = JsonSerializer.Serialize(requestData);
+        var content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
+
+        // Llamar a la API
+        var url = $"{_baseApi}registrarIngreso";
+        var response = await _httpClient.PostAsync(url, content);
+
+        Console.WriteLine($"Código de respuesta: {response.StatusCode}");
+        Console.WriteLine($"URL llamada: {url}");
+        Console.WriteLine($"Datos enviados: {jsonContent}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            string jsonResponse = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Respuesta exitosa: {jsonResponse}");
+            
+            var opciones = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var apiResponse = JsonSerializer.Deserialize<RegistrarIngresoResponse>(jsonResponse, opciones);
+
+            if (apiResponse != null)
+            {
+                Ocupados = apiResponse.Ocupados;
+                NumeroEstacionamiento = apiResponse.Estacionamientos;
+                
+                await DisplayAlert("Éxito", "Vehículo registrado en el sistema correctamente.", "OK");
+                return true;
+            }
+        }
+        else
+        {
+            string errorContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Error de API: {errorContent}");
+            await DisplayAlert("Error", $"No se pudo registrar el ingreso. Código: {response.StatusCode}\nDetalle: {errorContent}", "OK");
+            return false;
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Excepción: {ex.Message}");
+        await DisplayAlert("Error", $"Error al registrar ingreso: {ex.Message}", "OK");
+        return false;
+    }
+
+    return false;
+}
 
     private async void OnCambiarPlanClicked(object sender, EventArgs e)
     {
@@ -494,7 +595,6 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
         bool confirmar = await DisplayAlert("Confirmar", "¿Desea anular la operación actual?", "Sí", "No");
         if (confirmar)
         {
-            // Si se anuló un registro recién hecho, restar el contador y limpiar ticket
             if (!string.IsNullOrEmpty(_ultimoTicketRegistrado) && NumeroTicket == _ultimoTicketRegistrado)
             {
                 _contadorTicket = Math.Max(0, _contadorTicket - 1);
@@ -601,4 +701,21 @@ public class TipoVehiculoItem
     public string Value { get; set; }
     public string Display { get; set; }
     public bool Seleccionado { get; set; }
+}
+public class RegistrarIngresoResponse
+{
+    public int IdLocal { get; set; }
+    public string Placa { get; set; }
+    public string TipoVehiculo { get; set; }
+    public string ItemTipoVehiculo { get; set; }
+    public int Ocupados { get; set; }
+    public int Estacionamientos { get; set; }
+    public string CodCaja { get; set; }
+    public decimal TarifaFraccion { get; set; }
+    public bool Regularizacion { get; set; }
+    public DateTime FechaRegularizacion { get; set; }
+    public string UsuarioLogin { get; set; }
+    public string Observacion { get; set; }
+    public string ItemTipoFraccion { get; set; }
+    public bool AbonadoActivo { get; set; }
 }
