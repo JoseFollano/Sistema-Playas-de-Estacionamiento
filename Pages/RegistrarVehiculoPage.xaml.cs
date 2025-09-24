@@ -14,14 +14,6 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
     private Dictionary<string, VehiculoInfo> _vehiculosEnPlaya = new();
 
     // Tarifas por tipo de vehículo (fallback local)
-    private Dictionary<string, decimal> _tarifasPorTipo = new Dictionary<string, decimal>
-    {
-        { "Automóvil", 5.00m },
-        { "Camioneta", 7.00m },
-        { "Combi", 10.00m },
-        { "Furgón", 12.00m },
-        { "Moto", 3.00m }
-    };
 
     private readonly HttpClient _httpClient = new();
     private readonly string _baseApi = "https://localhost:7211/"; // ajustar si es necesario
@@ -256,15 +248,24 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
 
     private void ActualizarTarifa()
     {
-        if (!string.IsNullOrEmpty(TipoVehiculo) && _tarifasPorTipo.ContainsKey(TipoVehiculo))
+        if (!string.IsNullOrEmpty(TipoVehiculo))
         {
-            TarifaHora = _tarifasPorTipo[TipoVehiculo];
-        }
-        else
-        {
-            // Si tenemos un tipo seleccionado que proviene de la API y no está en _tarifasPorTipo,
-            // no cambiar la tarifa aquí: la tarifa puede venir desde la validación de placa.
-            TarifaHora = TarifaHora; // no-op para evitar reset
+            // Buscar el código correspondiente al tipo seleccionado
+            string codigoVehiculo = "";
+            foreach (var kvp in _mapaTipoCodigoADisplay)
+            {
+                if (kvp.Value == TipoVehiculo)
+                {
+                    codigoVehiculo = kvp.Key;
+                    break;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(codigoVehiculo))
+            {
+                // Llamar a la API para obtener la tarifa real
+                _ = ObtenerTarifaDesdeAPI(codigoVehiculo);
+            }
         }
     }
 
@@ -383,6 +384,34 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Error al cargar tipos de vehículo: {ex.Message}");
+        }
+    }
+
+    private async Task ObtenerTarifaDesdeAPI(string itemVehiculo)
+    {
+        try
+        {
+            var url = $"{_baseApi}validarTarifa?itemVehiculo={itemVehiculo}";
+            var response = await _httpClient.GetAsync(url);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+
+                // La API devuelve solo un número, no un objeto
+                if (decimal.TryParse(json, out decimal precio))
+                {
+                    // Actualizar la propiedad con notificación de cambio
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        TarifaHora = precio;
+                    });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error al obtener tarifa: {ex.Message}");
         }
     }
 
@@ -572,7 +601,7 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
 
     private async void OnCambiarPlanClicked(object sender, EventArgs e)
     {
-        var cambiarPage = new CambiarPlanPage(TipoVehiculo, _tarifasPorTipo);
+        var cambiarPage = new CambiarPlanPage(TipoVehiculo, null);
         cambiarPage.OnPlanCambiado += (nuevoTipo, nuevaTarifa) =>
         {
             TipoVehiculo = nuevoTipo;
@@ -718,4 +747,10 @@ public class RegistrarIngresoResponse
     public string Observacion { get; set; }
     public string ItemTipoFraccion { get; set; }
     public bool AbonadoActivo { get; set; }
+}
+public class ValidarTarifaResponse
+{
+    public decimal Precio { get; set; }
+    public string Msj { get; set; }
+    public bool Result { get; set; }
 }
