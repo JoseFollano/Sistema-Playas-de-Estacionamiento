@@ -148,7 +148,17 @@
                 <Button Text="Cambiar Plan" 
                         Grid.Column="1"
                         Style="{StaticResource PrimaryButton}"
-                        Clicked="OnCambiarPlanClicked"/>
+                        Clicked="OnCambiarPlanClicked"
+                        IsEnabled="{Binding CambiarPlanHabilitado}">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding CambiarPlanHabilitado}" Value="False">
+                            <Setter Property="Opacity" Value="0.5" />
+                        </DataTrigger>
+                        <DataTrigger TargetType="Button" Binding="{Binding CambiarPlanHabilitado}" Value="True">
+                            <Setter Property="Opacity" Value="1" />
+                        </DataTrigger>  
+                    </Button.Triggers>
+                </Button>
                 <Button Text="Anular" 
                         Grid.Column="2"
                         Style="{StaticResource DangerButton}"

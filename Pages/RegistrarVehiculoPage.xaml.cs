@@ -56,6 +56,9 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
         {
             _placa = value;
             OnPropertyChanged();
+            // Notificar también la propiedad que controla el botón Cambiar Plan
+            OnPropertyChanged(nameof(CambiarPlanHabilitado));
+
             ActualizarEstadoIngreso();
             // Validar automáticamente si la placa tiene 6 caracteres
             if (!string.IsNullOrWhiteSpace(_placa) && _placa.Length == 6)
@@ -64,6 +67,9 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
             }
         }
     }
+
+    // Propiedad pública que indica si el botón Cambiar Plan debe estar habilitado
+    public bool CambiarPlanHabilitado => !string.IsNullOrWhiteSpace(Placa);
 
     private string _estadoIngreso = "";
     public string EstadoIngreso
@@ -661,7 +667,7 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
             _ultimoTicketRegistrado = null;
             LimpiarFormulario();
         }
-    }       
+    }      
 
     private async void OnFacturaClicked(object sender, EventArgs e)
     {
@@ -683,6 +689,9 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
         // No limpiar TarifaHora ni TotalPagar, ya que pueden ser necesarios para el siguiente registro
         // Limpiar también el campo de tiempo estacionado
         TiempoEstacionado = "";
+
+        // Notificar cambio en la propiedad que habilita el botón Cambiar Plan
+        OnPropertyChanged(nameof(CambiarPlanHabilitado));
     }
 
     public event PropertyChangedEventHandler PropertyChanged;

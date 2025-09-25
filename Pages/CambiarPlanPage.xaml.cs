@@ -14,6 +14,7 @@ public partial class CambiarPlanPage : ContentPage
     public event Action<string, decimal> OnPlanCambiado; // tipo nuevo, tarifa nueva
     private readonly HttpClient _httpClient = new();
     private readonly string _baseApi = "https://localhost:7211/";
+    private decimal _tarifaSeleccionada = 0m;
 
     public CambiarPlanPage(string tipoActual, Dictionary<string, decimal> tarifas)
     {
@@ -50,17 +51,77 @@ public partial class CambiarPlanPage : ContentPage
         }
     }
 
-    private void PickerNuevoTipo_SelectedIndexChanged(object sender, EventArgs e)
+    private async void PickerNuevoTipo_SelectedIndexChanged(object sender, EventArgs e)
     {
         if (PickerNuevoTipo.SelectedIndex >= 0)
         {
             var display = PickerNuevoTipo.Items[PickerNuevoTipo.SelectedIndex];
-            // Aquí podrías obtener la tarifa de otra API si es necesario
-            TarifaLabel.Text = ""; // No hay tarifa en este endpoint
+            var tipoItem = _tiposVehiculo.Find(x => x.Display == display);
+            if (tipoItem != null && !string.IsNullOrEmpty(tipoItem.Value))
+            {
+                // Obtener tarifa desde el endpoint validarTarifa
+                await ObtenerTarifaDesdeAPIAsync(tipoItem.Value);
+            }
+            else
+            {
+                TarifaLabel.Text = "S/. 0.00";
+                _tarifaSeleccionada = 0m;
+            }
         }
         else
         {
             TarifaLabel.Text = "S/. 0.00";
+            _tarifaSeleccionada = 0m;
+        }
+    }
+
+    private async Task ObtenerTarifaDesdeAPIAsync(string itemVehiculo)
+    {
+        try
+        {
+            var url = $"{_baseApi}validarTarifa?idEmpresa=1&itemVehiculo={Uri.EscapeDataString(itemVehiculo)}";
+            var response = await _httpClient.GetAsync(url);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+
+                // La API devuelve solo un número (text/plain)
+                if (decimal.TryParse(json, out decimal precio))
+                {
+                    _tarifaSeleccionada = precio;
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        TarifaLabel.Text = $"S/. {_tarifaSeleccionada:F2}";
+                    });
+                }
+                else
+                {
+                    // Si la respuesta no se puede parsear, dejar en 0
+                    _tarifaSeleccionada = 0m;
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        TarifaLabel.Text = "S/. 0.00";
+                    });
+                }
+            }
+            else
+            {
+                _tarifaSeleccionada = 0m;
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    TarifaLabel.Text = "S/. 0.00";
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            _tarifaSeleccionada = 0m;
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                TarifaLabel.Text = "S/. 0.00";
+            });
+            await DisplayAlert("Error", $"No se pudo obtener la tarifa: {ex.Message}", "OK");
         }
     }
 
@@ -78,7 +139,14 @@ public partial class CambiarPlanPage : ContentPage
         }
         var display = PickerNuevoTipo.Items[PickerNuevoTipo.SelectedIndex];
         var tipoItem = _tiposVehiculo.Find(x => x.Display == display);
-        OnPlanCambiado?.Invoke(display, 0); // Tarifa 0, puedes ajustar si tienes otra fuente
+
+        // Asegurarnos de tener la tarifa actualizada antes de invocar el evento
+        if (tipoItem != null && !string.IsNullOrEmpty(tipoItem.Value))
+        {
+            await ObtenerTarifaDesdeAPIAsync(tipoItem.Value);
+        }
+
+        OnPlanCambiado?.Invoke(display, _tarifaSeleccionada);
         await Navigation.PopModalAsync();
     }
 }
