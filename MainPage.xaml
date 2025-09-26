@@ -1,111 +1,115 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="sistemaPlaya.MainPage"
-             Title="Principal - Playa de Estacionamiento">
+xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+x:Class="sistemaPlaya.MainPage"
+Title="Principal - Playa de Estacionamiento"
+BackgroundColor="#FAFAFA">
 
     <Grid RowDefinitions="Auto, Auto, *, Auto" ColumnDefinitions="*" Padding="20">
-        <VerticalStackLayout Grid.Row="0" HorizontalOptions="CenterAndExpand" Margin="0,20,0,30">
-            <Label Text="¡Bienvenido/a!"
-                   FontSize="24"
-                   FontAttributes="Bold"
-                   HorizontalOptions="Center"
-                   TextColor="{StaticResource Primary}"/>
-            <Label x:Name="UserNameLabel"
-                   Text="[Nombre del Usuario]"
-                   FontSize="20"
-                   HorizontalOptions="Center"
-                   Margin="0,5,0,0"
-                   TextColor="{StaticResource Gray700}"/>
-            <Label x:Name="CurrentDateLabel"
-                   Text="[Fecha Actual]"
-                   FontSize="16"
-                   HorizontalOptions="Center"
-                   Margin="0,10,0,0"
-                   TextColor="{StaticResource Gray700}"/>
+        <Grid Grid.Row="0" ColumnDefinitions="*,*" ColumnSpacing="40">
+            <!-- Izquierda: Bienvenido -->
+            <VerticalStackLayout Grid.Column="0" VerticalOptions="Start" Spacing="10" HorizontalOptions="Start">
+                <Label Text="👋 ¡Bienvenido/a!"
+FontSize="24"
+FontAttributes="Bold"
+TextColor="#2196F3"/>
+                <Label x:Name="UserNameLabel"
+Text="[Nombre del Usuario]"
+FontSize="20"
+TextColor="#616161"/>
+                <Label x:Name="CurrentDateLabel"
+Text="[Fecha Actual]"
+FontSize="16"
+TextColor="#616161"/>
 
-            <!-- Información de la caja abierta -->
-            <Label x:Name="CajaAbiertaInfoLabel"
-                   Text="Caja: Cerrada"
-                   FontSize="16"
-                   FontAttributes="Bold"
-                   HorizontalOptions="Center"
-                   Margin="0,15,0,0"
-                   TextColor="{StaticResource Accent}"/>
+                <!-- Información de la caja abierta -->
+                <Frame x:Name="CajaFrame" BackgroundColor="#F5F5F5" Padding="10,8" CornerRadius="8" HasShadow="True">
+                    <Label x:Name="CajaAbiertaInfoLabel"
+Text="🔒 Caja: Cerrada"
+FontSize="14"
+FontAttributes="Bold"
+HorizontalOptions="Start"
+TextColor="#FF4081"/>
+                </Frame>
+            </VerticalStackLayout>
 
-            <!-- Información de estacionamientos - ALINEADO HORIZONTALMENTE -->
-            <HorizontalStackLayout Spacing="25" HorizontalOptions="Center" Margin="0,20,0,0">
-                <VerticalStackLayout>
-                    <Label Text="Total:" 
-                           FontSize="16" 
-                           FontAttributes="Bold" 
-                           HorizontalOptions="Center"
-                           TextColor="{StaticResource Gray900}"/>
-                    <Label x:Name="TotalEstacionamientosLabel" 
-                           Text="0" 
-                           FontSize="18" 
-                           FontAttributes="Bold"
-                           HorizontalOptions="Center"
-                           TextColor="{StaticResource Gray900}"/>
-                </VerticalStackLayout>
+            <!-- Derecha: Lista de estacionamientos -->
+            <VerticalStackLayout Grid.Column="1" VerticalOptions="End" Spacing="15" HorizontalOptions="End">
+                <Frame BackgroundColor="#FAFAFA" Padding="15" CornerRadius="10" HasShadow="True">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="📊 Total:"
+FontSize="16"
+FontAttributes="Bold"
+TextColor="#212121"/>
+                        <Label x:Name="TotalEstacionamientosLabel"
+Text="0"
+FontSize="20"
+FontAttributes="Bold"
+TextColor="#2196F3"/>
 
-                <VerticalStackLayout>
-                    <Label Text="Ocupados:" 
-                           FontSize="16" 
-                           FontAttributes="Bold" 
-                           HorizontalOptions="Center"
-                           TextColor="{StaticResource Red}"/>
-                    <Label x:Name="OcupadosLabel" 
-                           Text="0" 
-                           FontSize="18" 
-                           FontAttributes="Bold"
-                           HorizontalOptions="Center"
-                           TextColor="{StaticResource Red}"/>
-                </VerticalStackLayout>
+                        <Label Text="🚗 Ocupados:"
+FontSize="16"
+FontAttributes="Bold"
+TextColor="#F44336"
+Margin="0,10,0,0"/>
+                        <Label x:Name="OcupadosLabel"
+Text="0"
+FontSize="20"
+FontAttributes="Bold"
+TextColor="#F44336"/>
 
-                <VerticalStackLayout>
-                    <Label Text="Disponibles:" 
-                           FontSize="16" 
-                           FontAttributes="Bold" 
-                           HorizontalOptions="Center"
-                           TextColor="{StaticResource Green}"/>
-                    <Label x:Name="DisponiblesLabel" 
-                           Text="0" 
-                           FontSize="18" 
-                           FontAttributes="Bold"
-                           HorizontalOptions="Center"
-                           TextColor="{StaticResource Green}"/>
-                </VerticalStackLayout>
-            </HorizontalStackLayout>
-        </VerticalStackLayout>
+                        <Label Text="🅿️ Disponibles:"
+FontSize="16"
+FontAttributes="Bold"
+TextColor="#4CAF50"
+Margin="0,10,0,0"/>
+                        <Label x:Name="DisponiblesLabel"
+Text="0"
+FontSize="20"
+FontAttributes="Bold"
+TextColor="#4CAF50"/>
+                    </VerticalStackLayout>
+                </Frame>
+            </VerticalStackLayout>
+        </Grid>
 
-        <BoxView Grid.Row="1" HeightRequest="1" Color="{StaticResource Gray200}" Margin="0,0,0,30" />
+        <BoxView Grid.Row="1" HeightRequest="2" Color="#E0E0E0" Margin="0,0,0,30" />
 
-        <VerticalStackLayout Grid.Row="2" Spacing="15" VerticalOptions="StartAndExpand">
-            <!-- Primera fila: Aperturar Caja - Cerrar Caja -->
-            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto" ColumnSpacing="15" RowSpacing="15">
-                <Button x:Name="btnAperturarCaja" Grid.Row="0" Grid.Column="0" Text="Aperturar Caja" Clicked="OnAperturarCajaClicked"
-                        BackgroundColor="{StaticResource Secondary}" TextColor="White" CornerRadius="10" HeightRequest="60"/>
-                <Button x:Name="btnCerrarCaja" Grid.Row="0" Grid.Column="1" Text="Cerrar Caja" Clicked="OnCerrarCajaClicked"
-                        BackgroundColor="{StaticResource Tertiary}" TextColor="White" CornerRadius="10" HeightRequest="60"/>
-            </Grid>
+        <ScrollView Grid.Row="2" VerticalOptions="StartAndExpand" Margin="0,0,0,20">
+            <VerticalStackLayout Spacing="25">
+                <!-- Primera fila: Aperturar Caja - Cerrar Caja -->
+                <Frame BackgroundColor="#F5F5F5" Padding="20" CornerRadius="15" HasShadow="True">
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto" ColumnSpacing="15" RowSpacing="15">
+                        <Button x:Name="btnAperturarCaja" Grid.Row="0" Grid.Column="0" Text="🔓 Aperturar Caja" Clicked="OnAperturarCajaClicked"
+BackgroundColor="#03DAC6" TextColor="White" CornerRadius="12" HeightRequest="60" FontAttributes="Bold"/>
+                        <Button x:Name="btnCerrarCaja" Grid.Row="0" Grid.Column="1" Text="🔒 Cerrar Caja" Clicked="OnCerrarCajaClicked"
+BackgroundColor="#FF5722" TextColor="White" CornerRadius="12" HeightRequest="60" FontAttributes="Bold"/>
+                    </Grid>
+                </Frame>
 
-            <!-- Segunda fila: Entrada Vehículo - Mantenimiento -->
-            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto" ColumnSpacing="15" RowSpacing="15">
-                <Button x:Name="btnEntradaVehiculo" Grid.Row="0" Grid.Column="0" Text="Entrada Vehículo" Clicked="OnEntradaVehiculoClicked"
-            BackgroundColor="{StaticResource Green}" TextColor="White" CornerRadius="10" HeightRequest="60"/>
-                <Button x:Name="btnMantenimiento" Grid.Row="0" Grid.Column="1" Text="Mantenimiento" Clicked="OnMantenimientoClicked"
-            BackgroundColor="{StaticResource Orange}" TextColor="White" CornerRadius="10" HeightRequest="60"/>
-            </Grid>
+                <!-- Segunda fila: Entrada Vehículo - Mantenimiento -->
+                <Frame BackgroundColor="#F5F5F5" Padding="20" CornerRadius="15" HasShadow="True">
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto" ColumnSpacing="15" RowSpacing="15">
+                        <Button x:Name="btnEntradaVehiculo" Grid.Row="0" Grid.Column="0" Text="🚗 Entrada Vehículo" Clicked="OnEntradaVehiculoClicked"
+BackgroundColor="#4CAF50" TextColor="White" CornerRadius="12" HeightRequest="60" FontAttributes="Bold"/>
+                        <Button x:Name="btnMantenimiento" Grid.Row="0" Grid.Column="1" Text="🔧 Mantenimiento" Clicked="OnMantenimientoClicked"
+BackgroundColor="#FF9800" TextColor="White" CornerRadius="12" HeightRequest="60" FontAttributes="Bold"/>
+                    </Grid>
+                </Frame>
 
-            <!-- Tercera fila: Ver Vehículos -->
-            <Button x:Name="btnVerVehiculos" Text="Ver Vehículos" Clicked="OnVerVehiculosClicked"
-                    BackgroundColor="{StaticResource Primary}" TextColor="White" CornerRadius="10" HeightRequest="60" Margin="0,10,0,0"/>
-        </VerticalStackLayout>
+                <!-- Tercera fila: Ver Vehículos -->
+                <Frame BackgroundColor="#F5F5F5" Padding="20" CornerRadius="15" HasShadow="True">
+                    <Button x:Name="btnVerVehiculos" Text="📋 Ver Vehículos" Clicked="OnVerVehiculosClicked"
+BackgroundColor="#2196F3" TextColor="White" CornerRadius="12" HeightRequest="60" FontAttributes="Bold"/>
+                </Frame>
+            </VerticalStackLayout>  
+        </ScrollView>
 
-        <Button x:Name="btnCerrarSesion" Grid.Row="3" Text="Cerrar Sesión" Clicked="OnCerrarSesionClicked"
-                BackgroundColor="{StaticResource Red}" TextColor="White" CornerRadius="10" HeightRequest="50"
-                HorizontalOptions="FillAndExpand" Margin="0,30,0,0"/>
+        <Frame Grid.Row="3" BackgroundColor="#F5F5F5" Padding="10" CornerRadius="12" HasShadow="True" Margin="0,20,0,0">
+            <Button x:Name="btnCerrarSesion" Text="🚪 Cerrar Sesión" Clicked="OnCerrarSesionClicked"
+BackgroundColor="#F44336" TextColor="White" CornerRadius="10" HeightRequest="45"
+HorizontalOptions="FillAndExpand" FontAttributes="Bold"/>
+        </Frame>
 
     </Grid>
 </ContentPage>
