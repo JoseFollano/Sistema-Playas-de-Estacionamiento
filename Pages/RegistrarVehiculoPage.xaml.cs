@@ -1,10 +1,17 @@
-﻿    using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Microsoft.Maui.Graphics;
 using System.Net.Http;
 using System.Text.Json;
 using Microsoft.Maui.Storage;
+using PdfSharpCore.Drawing;
+using PdfSharpCore.Pdf;
+using QRCoder;
+using System.IO;
+using ZXing;
+using ZXing.Common;
+using ZXing.Rendering;
 
 namespace sistemaPlaya.Pages;
 
@@ -54,16 +61,20 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
         get => _placa;
         set
         {
-            _placa = value;
-            OnPropertyChanged();
-            // Notificar también la propiedad que controla el botón Cambiar Plan
-            OnPropertyChanged(nameof(CambiarPlanHabilitado));
-
-            ActualizarEstadoIngreso();
-            // Validar automáticamente si la placa tiene 6 caracteres
-            if (!string.IsNullOrWhiteSpace(_placa) && _placa.Length == 6)
+            var upperPlaca = value?.ToUpper();
+            if (_placa != upperPlaca)
             {
-                _ = VerificarPlacaAsync();
+                _placa = upperPlaca;
+                OnPropertyChanged();
+                // Notificar también la propiedad que controla el botón Cambiar Plan
+                OnPropertyChanged(nameof(CambiarPlanHabilitado));
+
+                ActualizarEstadoIngreso();
+                // Validar automáticamente si la placa tiene 6 caracteres
+                if (!string.IsNullOrWhiteSpace(_placa) && _placa.Length == 6)
+                {
+                    _ = VerificarPlacaAsync();
+                }
             }
         }
     }
@@ -94,7 +105,7 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
     }
 
     // Inicialmente vacío; se cargará desde la API getComboTipoVehiculos
-    public ObservableCollection<string> TiposVehiculo { get; set; } = new();
+    public ObservableCollection<string> TiposVehiculo { get; set; } = new ObservableCollection<string>();
 
     private string _tipoVehiculo;
     public string TipoVehiculo
@@ -289,20 +300,17 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
 
         try
         {
-            // Obtener idUsuario desde Preferences
             int idUsuario = Preferences.Get("IdUsuario", 0);
             if (idUsuario == 0)
             {
                 await DisplayAlert("Error", "No se encontró el usuario. Debe iniciar sesión nuevamente.", "OK");
                 return;
             }
-            // Llamada a la API con idUsuario real (corregido: sin espacio en ValidaPlacaExiste)
             var placaEsc = Uri.EscapeDataString(Placa);
             var url = $"{_baseApi}ValidaPlacaExiste?placa={placaEsc}&idUsuario={idUsuario}";
             var resp = await _httpClient.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
             {
-                // Si no responde bien, dejar el estado como ingreso
                 return;
             }
 
@@ -313,47 +321,47 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
             if (data == null)
                 return;
 
-            // Si la API indica que está parqueado o modo es salida, mostrar datos de salida
+            // Asignar todos los datos recibidos
             if ((data.Parqueado?.ToUpper() == "S") || (data.Modo?.ToLower().Contains("salida") == true))
             {
-                // Mapear datos al UI
                 EstadoIngreso = "SALIDA DE VEHÍCULO";
                 EstadoIngresoColor = Colors.Orange;
                 MostrarPago = true;
                 TiempoEstacionado = data.Tiempo ?? "";
-                // Usar totalCobrar si viene o calcular con precio
-                TotalPagar = data.TotalCobrar != 0 ? data.TotalCobrar : data.Precio * 1; // fallback
+                TotalPagar = data.TotalCobrar != 0 ? data.TotalCobrar : data.Precio * 1;
                 Observacion = data.Observacion ?? "";
                 NumeroTicket = data.NroTicket;
                 FechaIngreso = data.FechaIngreso;
-
-                // Traducir código de tipo a display si lo tenemos
+                // Tarifa por hora
+                TarifaHora = data.Precio;
+                // Tipo de vehículo
                 if (!string.IsNullOrEmpty(data.TipoVehiculo) && _mapaTipoCodigoADisplay.TryGetValue(data.TipoVehiculo, out var display))
                 {
                     TipoVehiculo = display;
                 }
                 else
                 {
-                    // Si no tenemos el mapeo, dejar el código para referencia
                     TipoVehiculo = data.TipoVehiculo;
                 }
-
                 RegistrarHabilitado = false;
             }
             else
             {
-                // No está en sistema → ingreso
                 EstadoIngreso = "INGRESO DE VEHÍCULO";
                 EstadoIngresoColor = Colors.Green;
                 MostrarPago = false;
                 Observacion = "";
                 TipoVehiculo = null;
+                TarifaHora = 0;
+                NumeroTicket = "";
+                FechaIngreso = DateTime.MinValue;
+                TiempoEstacionado = "";
+                TotalPagar = 0;
                 RegistrarHabilitado = true;
             }
         }
         catch (Exception ex)
         {
-            // No bloquear al usuario si falla la llamada
             System.Diagnostics.Debug.WriteLine($"Error al validar placa: {ex.Message}");
         }
     }
@@ -498,7 +506,72 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
 
                 Ocupados++;
 
-                await DisplayAlert("Éxito", "Ingreso de vehículo registrado correctamente", "OK");
+                // --- Generar ticket PDF ---
+                try
+                {
+                    var pdf = new PdfDocument();
+                    var page = pdf.AddPage();
+                    page.Width = 300;
+                    page.Height = 200;
+                    var gfx = XGraphics.FromPdfPage(page);
+                    var font = new XFont("Arial", 14, XFontStyle.Bold);
+                    var fontSmall = new XFont("Arial", 10, XFontStyle.Regular);
+
+                    // Tipo de vehículo
+                    gfx.DrawString($"Tipo de vehículo: {TipoVehiculo}", font, XBrushes.Black, new XRect(10, 20, page.Width, 20), XStringFormats.TopLeft);
+                    // Placa
+                    gfx.DrawString($"Placa: {Placa}", fontSmall, XBrushes.Black, new XRect(10, 45, page.Width, 20), XStringFormats.TopLeft);
+                    // Código de operación
+                    gfx.DrawString($"Código de operación: {NumeroTicket}", fontSmall, XBrushes.Black, new XRect(10, 65, page.Width, 20), XStringFormats.TopLeft);
+
+                    // Código de barras para la placa
+                    var barcodeWriter = new BarcodeWriterPixelData
+                    {
+                        Format = BarcodeFormat.CODE_128,
+                        Options = new EncodingOptions
+                        {
+                            Height = 60,
+                            Width = 200,
+                            Margin = 2
+                        }
+                    };
+                    var pixelData = barcodeWriter.Write(Placa);
+                    using (var ms = new MemoryStream())
+                    {
+                        // Convertir PixelData a PNG
+                        using (var bitmap = new System.Drawing.Bitmap(pixelData.Width, pixelData.Height, System.Drawing.Imaging.PixelFormat.Format32bppRgb))
+                        {
+                            var bitmapData = bitmap.LockBits(new System.Drawing.Rectangle(0, 0, pixelData.Width, pixelData.Height), System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
+                            try
+                            {
+                                System.Runtime.InteropServices.Marshal.Copy(pixelData.Pixels, 0, bitmapData.Scan0, pixelData.Pixels.Length);
+                            }
+                            finally
+                            {
+                                bitmap.UnlockBits(bitmapData);
+                            }
+                            bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                            ms.Position = 0;
+                            var img = XImage.FromStream(() => ms);
+                            gfx.DrawImage(img, 50, 90, 200, 60);
+                        }
+                    }
+
+                    // Guardar PDF en Documents
+                    var fileName = $"Ticket_{Placa}_{NumeroTicket}.pdf";
+                    var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                    var filePath = Path.Combine(documents, fileName);
+                    using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+                    {
+                        pdf.Save(fs);
+                    }
+                    await DisplayAlert("Ticket generado", $"El ticket se guardó en: {filePath}", "OK");
+                }
+                catch (Exception ex)
+                {
+                    await DisplayAlert("Error al generar ticket", ex.Message, "OK");
+                }
+                // --- Fin ticket PDF ---
 
                 LimpiarFormulario();
             }

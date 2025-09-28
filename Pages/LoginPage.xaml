@@ -5,13 +5,19 @@
              Title="Iniciar Sesión - Playa de Estacionamiento">
     <Grid RowDefinitions="Auto,*,Auto" Padding="20">
         <VerticalStackLayout Grid.Row="1" Spacing="20" VerticalOptions="CenterAndExpand" HorizontalOptions="FillAndExpand">
-            <Label Text="Sistema de Playa de Estacionamiento"
-                   FontSize="26"
-                   FontAttributes="Bold"
-                   HorizontalOptions="Center"
-                   HorizontalTextAlignment="Center"
-                   Margin="0,0,0,30"
-                   TextColor="{StaticResource Primary}"/>
+            <!-- Encabezado con icono -->
+            <HorizontalStackLayout HorizontalOptions="Center" Spacing="10" Margin="0,0,0,10">
+                <Image WidthRequest="32" HeightRequest="32">
+                    <Image.Source>
+                        <FontImageSource Glyph="&#xE72E;" FontFamily="Segoe MDL2 Assets" Color="{StaticResource Primary}" />
+                    </Image.Source>
+                </Image>
+                <Label Text="Sistema de Playa de Estacionamiento"
+                       FontSize="26"
+                       FontAttributes="Bold"
+                       VerticalOptions="Center"
+                       TextColor="{StaticResource Primary}"/>
+            </HorizontalStackLayout>
             <Frame HasShadow="True" CornerRadius="10" Padding="15">
                 <VerticalStackLayout Spacing="10">
                     <Label Text="Usuario:" FontSize="16" TextColor="{StaticResource Gray900}"/>
@@ -28,6 +34,7 @@
                            ClearButtonVisibility="WhileEditing"/>
                 </VerticalStackLayout>
             </Frame>
+            <!-- Botón con icono -->
             <Button x:Name="LoginButton"
                     Text="Iniciar Sesión"
                     Clicked="OnLoginButtonClicked"
@@ -35,7 +42,11 @@
                     BackgroundColor="{StaticResource Primary}"
                     TextColor="{StaticResource White}"
                     CornerRadius="10"
-                    HeightRequest="50"/>
+                    HeightRequest="50">
+                <Button.ImageSource>
+                    <FontImageSource Glyph="&#xE13D;" FontFamily="Segoe MDL2 Assets" Color="{StaticResource White}" />
+                </Button.ImageSource>
+            </Button>
             <ActivityIndicator x:Name="LoadingIndicator"
                                IsRunning="False"
                                IsVisible="False"
