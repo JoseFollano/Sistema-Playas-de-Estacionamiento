@@ -12,6 +12,9 @@ using System.IO;
 using ZXing;
 using ZXing.Common;
 using ZXing.Rendering;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Formats.Png;
 
 namespace sistemaPlaya.Pages;
 
@@ -93,8 +96,8 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
         }
     }
 
-    private Color _estadoIngresoColor = Colors.Black;
-    public Color EstadoIngresoColor
+    private Microsoft.Maui.Graphics.Color _estadoIngresoColor = Microsoft.Maui.Graphics.Colors.Black;
+    public Microsoft.Maui.Graphics.Color EstadoIngresoColor
     {
         get => _estadoIngresoColor;
         set
@@ -230,7 +233,7 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
         if (string.IsNullOrWhiteSpace(Placa))
         {
             EstadoIngreso = "";
-            EstadoIngresoColor = Colors.Black;
+            EstadoIngresoColor = Microsoft.Maui.Graphics.Colors.Black;
             MostrarPago = false;
             TipoVehiculo = null;
             RegistrarHabilitado = true;
@@ -239,7 +242,7 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
         {
             // Si está en el diccionario local
             EstadoIngreso = "SALIDA DE VEHÍCULO";
-            EstadoIngresoColor = Colors.Orange;
+            EstadoIngresoColor = Microsoft.Maui.Graphics.Colors.Orange;
             MostrarPago = true;
             var vehiculo = _vehiculosEnPlaya[Placa.ToUpper()];
             var tiempo = DateTime.Now - vehiculo.HoraIngreso;
@@ -255,7 +258,7 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
             // Si no está localmente, esperar a que el usuario complete la placa y luego
             // se hará una verificación contra la API en OnPlacaCompleted.
             EstadoIngreso = "INGRESO DE VEHÍCULO";
-            EstadoIngresoColor = Colors.Green;
+            EstadoIngresoColor = Microsoft.Maui.Graphics.Colors.Green;
             MostrarPago = false;
             Observacion = ""; // Limpiar observación para nuevos ingresos
             TipoVehiculo = null; // Limpiar tipo de vehículo para nuevos ingresos
@@ -538,19 +541,26 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
                     var pixelData = barcodeWriter.Write(Placa);
                     using (var ms = new MemoryStream())
                     {
-                        // Convertir PixelData a PNG
-                        using (var bitmap = new System.Drawing.Bitmap(pixelData.Width, pixelData.Height, System.Drawing.Imaging.PixelFormat.Format32bppRgb))
+                        // Convertir PixelData a PNG usando ImageSharp
+                        using (var image = new Image<Rgba32>(pixelData.Width, pixelData.Height))
                         {
-                            var bitmapData = bitmap.LockBits(new System.Drawing.Rectangle(0, 0, pixelData.Width, pixelData.Height), System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
-                            try
+                            // Copy pixel data (ZXing returns BGRA32 or similar; map bytes to ImageSharp pixel)
+                            var bytes = pixelData.Pixels;
+                            // ZXing PixelData is in BGRA32 order; ImageSharp expects Rgba32
+                            for (int y = 0; y < pixelData.Height; y++)
                             {
-                                System.Runtime.InteropServices.Marshal.Copy(pixelData.Pixels, 0, bitmapData.Scan0, pixelData.Pixels.Length);
+                                for (int x = 0; x < pixelData.Width; x++)
+                                {
+                                    int idx = (y * pixelData.Width + x) * 4;
+                                    byte b = bytes[idx + 0];
+                                    byte g = bytes[idx + 1];
+                                    byte r = bytes[idx + 2];
+                                    byte a = bytes[idx + 3];
+                                    image[x, y] = new Rgba32(r, g, b, a);
+                                }
                             }
-                            finally
-                            {
-                                bitmap.UnlockBits(bitmapData);
-                            }
-                            bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+
+                            image.Save(ms, PngFormat.Instance);
                             ms.Position = 0;
                             var img = XImage.FromStream(() => ms);
                             gfx.DrawImage(img, 50, 90, 200, 60);

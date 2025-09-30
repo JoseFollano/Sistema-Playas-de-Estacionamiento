@@ -88,83 +88,90 @@
             <Grid ColumnDefinitions="2.5*,2*" ColumnSpacing="18">
                 <!-- Columna 0: Placa y secciones debajo -->
                 <VerticalStackLayout Spacing="12" Grid.Column="0">
-                    <!-- Placa del vehículo -->
+                    <!-- Placa del vehículo con botón escáner al lado, más visible y sección fija -->
+                    <Grid RowDefinitions="Auto" ColumnDefinitions="*,Auto" Margin="0,0,0,0">
+                        <!-- Entry de placa ocupa la columna 0 -->
+                        <Entry x:Name="EntryPlaca"
+                               Grid.Column="0"
+                               Placeholder="INGRESE PLACA (Ej: ABC123)"
+                               Text="{Binding Placa}"
+                               MaxLength="6"
+                               Completed="OnPlacaCompleted"
+                               BackgroundColor="{StaticResource SurfaceVariant}"
+                               Keyboard="Text"
+                               HorizontalTextAlignment="Center"
+                               FontSize="32"
+                               FontAttributes="Bold"
+                               HeightRequest="70"
+                               VerticalOptions="Center"
+                               HorizontalOptions="FillAndExpand" />
+                        <!-- Botón escáner ocupa la columna 1, más grande y con color de fondo -->
+                        <Button x:Name="btnScanner"
+                                Grid.Column="1"
+                                WidthRequest="80"
+                                HeightRequest="80"
+                                BackgroundColor="{StaticResource Primary}"
+                                CornerRadius="40"
+                                ImageSource="icon_scanner.png"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center"
+                                Padding="0"
+                                BorderColor="{StaticResource Success}" />
+                    </Grid>
+
+                    <!-- Botón REGISTRAR abajo de la sección de placa -->
+                    <Button Text="REGISTRAR"
+                            Style="{StaticResource SuccessButton}"
+                            IsEnabled="{Binding RegistrarHabilitado}"
+                            Clicked="OnRegistrarClicked"
+                            WidthRequest="160"
+                            ImageSource="icon_registrar.png"
+                            ContentLayout="Left,12" />
+
+                    <!-- Sección tipo de vehículo y tarifa ahora debajo del botón Registrar -->
                     <Frame>
                         <VerticalStackLayout Spacing="8">
-                            <Label Text="PLACA DEL VEHÍCULO" FontAttributes="Bold" FontSize="18" TextColor="{StaticResource Primary}" HorizontalOptions="Center"/>
-                            <Entry x:Name="EntryPlaca"
-                                   Placeholder="INGRESE PLACA (Ej: ABC123)"
-                                   Text="{Binding Placa}"
-                                   MaxLength="6"
-                                   Completed="OnPlacaCompleted"
-                                   BackgroundColor="{StaticResource SurfaceVariant}"
-                                   Keyboard="Text"
-                                   HorizontalTextAlignment="Center"
-                                   FontSize="32"
-                                   FontAttributes="Bold"
-                                   HeightRequest="70"/>
-                            <Label Text="{Binding EstadoIngreso}" FontAttributes="Bold" TextColor="{Binding EstadoIngresoColor}" HorizontalOptions="Center" FontSize="16"/>
+                            <Label Text="TIPO DE VEHÍCULO" FontAttributes="Bold" FontSize="16" TextColor="{StaticResource OnSurfaceVariant}"/>
+                            <Picker x:Name="PickerTipoVehiculo"
+                                    Title="Seleccione tipo de vehículo"
+                                    ItemsSource="{Binding TiposVehiculo}"
+                                    SelectedItem="{Binding TipoVehiculo}"
+                                    BackgroundColor="{StaticResource SurfaceVariant}"
+                                    HeightRequest="60"
+                                    FontSize="16"
+                                    TextColor="{StaticResource OnSurface}"
+                                    Margin="0,10,0,15"/>
+                            <BoxView HeightRequest="1" Color="{StaticResource OutlineVariant}" Margin="0,8"/>
+                            <Label Text="TARIFA POR HORA:" FontAttributes="Bold" FontSize="16"/>
+                            <Label Text="{Binding TarifaHora, StringFormat='S/. {0:F2}'}" FontAttributes="Bold" FontSize="22" TextColor="{StaticResource Success}"/>
+                            <Label Text="OBSERVACIÓN (OPCIONAL)" FontAttributes="Bold" FontSize="16" TextColor="{StaticResource OnSurfaceVariant}"/>
+                            <Entry Text="{Binding Observacion}" Placeholder="Ej: color, modelo, etc." BackgroundColor="{StaticResource SurfaceVariant}" HeightRequest="50" FontSize="16"/>
                         </VerticalStackLayout>
                     </Frame>
 
-                    <!-- Secciones debajo de placa: tipo/tarifa y botones -->
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="18">
-                        <!-- Sección tipo de vehículo y tarifa -->
-                        <VerticalStackLayout Spacing="8" Grid.Column="0">
-                            <Frame>
-                                <VerticalStackLayout Spacing="8">
-                                    <Label Text="TIPO DE VEHÍCULO" FontAttributes="Bold" FontSize="16" TextColor="{StaticResource OnSurfaceVariant}"/>
-                                    <Picker x:Name="PickerTipoVehiculo"
-                                            Title="Seleccione tipo de vehículo"
-                                            ItemsSource="{Binding TiposVehiculo}"
-                                            SelectedItem="{Binding TipoVehiculo}"
-                                            BackgroundColor="{StaticResource SurfaceVariant}"
-                                            HeightRequest="60"
-                                            FontSize="16"
-                                            TextColor="{StaticResource OnSurface}"
-                                            Margin="0,10,0,15"/>
-                                    <BoxView HeightRequest="1" Color="{StaticResource OutlineVariant}" Margin="0,8"/>
-                                    <Label Text="TARIFA POR HORA:" FontAttributes="Bold" FontSize="16"/>
-                                    <Label Text="{Binding TarifaHora, StringFormat='S/. {0:F2}'}" FontAttributes="Bold" FontSize="22" TextColor="{StaticResource Success}"/>
-                                    <Label Text="OBSERVACIÓN (OPCIONAL)" FontAttributes="Bold" FontSize="16" TextColor="{StaticResource OnSurfaceVariant}"/>
-                                    <Entry Text="{Binding Observacion}" Placeholder="Ej: color, modelo, etc." BackgroundColor="{StaticResource SurfaceVariant}" HeightRequest="50" FontSize="16"/>
-                                </VerticalStackLayout>
-                            </Frame>
-                        </VerticalStackLayout>
-                        <!-- Sección botones -->
-                        <VerticalStackLayout Spacing="18" Grid.Column="1" VerticalOptions="Start" HorizontalOptions="End">
-                            <Frame HasShadow="False" Padding="0" BackgroundColor="Transparent">
-                                <VerticalStackLayout Spacing="18">
-                                    <Button Text="REGISTRAR"
-                                            Style="{StaticResource SuccessButton}"
-                                            IsEnabled="{Binding RegistrarHabilitado}"
-                                            Clicked="OnRegistrarClicked"
-                                            WidthRequest="160"
-                                            ImageSource="icon_registrar.png"
-                                            ContentLayout="Left,12" />
-                                    <Button Text="PLAN"
-                                            Style="{StaticResource PrimaryButton}"
-                                            Clicked="OnCambiarPlanClicked"
-                                            IsEnabled="{Binding CambiarPlanHabilitado}"
-                                            WidthRequest="160"
-                                            ImageSource="icon_plan.png"
-                                            ContentLayout="Left,12">
-                                        <Button.Triggers>
-                                            <DataTrigger TargetType="Button" Binding="{Binding CambiarPlanHabilitado}" Value="False">
-                                                <Setter Property="Opacity" Value="0.5" />
-                                            </DataTrigger>
-                                        </Button.Triggers>
-                                    </Button>
-                                    <Button Text="ANULAR"
-                                            Style="{StaticResource DangerButton}"
-                                            Clicked="OnAnularClicked"
-                                            WidthRequest="160"
-                                            ImageSource="icon_anular.png"
-                                            ContentLayout="Left,12" />
-                                </VerticalStackLayout>
-                            </Frame>
-                        </VerticalStackLayout>
-                    </Grid> 
+                    <!-- Plan y Anular en una fila horizontal centrada abajo de todo -->
+                    <HorizontalStackLayout Spacing="12" HorizontalOptions="Center" Margin="0,12,0,0">
+                        <Button Text="PLAN"
+                                Style="{StaticResource PrimaryButton}"
+                                Clicked="OnCambiarPlanClicked"
+                                IsEnabled="{Binding CambiarPlanHabilitado}"
+                                WidthRequest="140"
+                                ImageSource="icon_plan.png"
+                                ContentLayout="Left,12">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding CambiarPlanHabilitado}" Value="False">
+                                    <Setter Property="Opacity" Value="0.5" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+
+                        <Button Text="ANULAR"
+                                Style="{StaticResource DangerButton}"
+                                Clicked="OnAnularClicked"
+                                WidthRequest="140"
+                                ImageSource="icon_anular.png"
+                                ContentLayout="Left,12" />
+                    </HorizontalStackLayout>
                 </VerticalStackLayout>
 
                 <!-- Columna 1: Información de ticket -->
