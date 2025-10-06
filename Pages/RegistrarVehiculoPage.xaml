@@ -70,9 +70,9 @@
     <ScrollView Padding="12" VerticalScrollBarVisibility="Never">
         <VerticalStackLayout Spacing="12">
 
-            <!-- Estadísticas: Total, Ocupados, Libres (más grande)--> 
+            <!-- Estadísticas: Total, Ocupados, Libres (más grande)-->
             <Frame Padding="18">
-                <Grid ColumnDefinitions="Auto,*,Auto,*,Auto,*" ColumnSpacing="18" HorizontalOptions="Center">
+                <Grid ColumnDefinitions="Auto,*,Auto,*,Auto,*,Auto" ColumnSpacing="18" HorizontalOptions="Center">
                     <Label Text="Total:" Grid.Column="0" FontAttributes="Bold" FontSize="18"/>
                     <Label Text="{Binding NumeroEstacionamiento}" Grid.Column="1" FontSize="18"/>
 
@@ -81,6 +81,15 @@
 
                     <Label Text="Libres:" Grid.Column="4" FontAttributes="Bold" FontSize="18"/>
                     <Label Text="{Binding Disponibles}" Grid.Column="5" FontSize="18" TextColor="{StaticResource Success}"/>
+
+                    <!-- Estado e ID de caja al costado -->
+                    <HorizontalStackLayout Grid.Column="6" Spacing="8" VerticalOptions="Center">
+                        <BoxView WidthRequest="12" HeightRequest="12" CornerRadius="6"
+                                 Color="{Binding CajaAbierta, Converter={StaticResource RegistrarButtonColorConverter}}"
+                                 VerticalOptions="Center"/>
+                        <Label Text="{Binding EstadoCaja}" FontAttributes="Bold" FontSize="15" VerticalOptions="Center"/>
+                        <Label Text="{Binding CajaId}" FontAttributes="Bold" FontSize="15" TextColor="{StaticResource Primary}" VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
                 </Grid>
             </Frame>
 
@@ -228,6 +237,7 @@
                     </VerticalStackLayout>
                 </Frame>
             </Grid>
+
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

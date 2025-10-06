@@ -725,32 +725,150 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
 
     private async void OnPagarClicked(object sender, EventArgs e)
     {
-        if (_vehiculosEnPlaya.ContainsKey(Placa?.ToUpper()))
+        if (string.IsNullOrWhiteSpace(Placa) || string.IsNullOrWhiteSpace(NumeroTicket))
         {
-            var vehiculo = _vehiculosEnPlaya[Placa.ToUpper()];
-            string mensaje;
-            if (_planCambiado)
+            await DisplayAlert("Error", "No hay datos válidos para pagar.", "OK");
+            return;
+        }
+
+        int idCaja = Preferences.Get("CajaAbiertaId", 0);
+        int idUsuario = Preferences.Get("IdUsuario", 0);
+        string usuarioLogin = Preferences.Get("UsuarioNombre", "");
+        int idLocal = 1;
+        string placa = Placa;
+        string formaPago = "0001";
+        decimal total = TotalPagar;
+
+        int nroTicket = 0;
+        int idOperacion = 0;
+        if (int.TryParse(NumeroTicket.TrimStart('0'), out int ticketNum))
+        {
+            nroTicket = ticketNum;
+            idOperacion = ticketNum;
+        }
+
+        var requestData = new
+        {
+            idOperacion = idOperacion,
+            usuarioLogin = usuarioLogin,
+            total = total,
+            codCaja = idCaja,
+            idLocal = idLocal,
+            idUsuario = idUsuario,
+            placa = placa,
+            nroTickets = nroTicket,
+            formaPago = formaPago
+        };
+
+        string jsonContent = JsonSerializer.Serialize(requestData);
+        var content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
+
+        var url = $"{_baseApi}pagarOperacion?idEmpresa=1";
+        try
+        {
+            var response = await _httpClient.PostAsync(url, content);
+            if (response.IsSuccessStatusCode)
             {
-                mensaje = "Registro exitoso";
-                _planCambiado = false;
+                var jsonResponse = await response.Content.ReadAsStringAsync();
+                await DisplayAlert("Éxito", "Pago registrado correctamente.", "OK");
+
+                // Generar ticket de salida PDF
+                DateTime fechaInicio = FechaIngreso;
+                DateTime fechaFin = DateTime.Now;
+                await GenerarTicketSalidaPDF(NumeroTicket, total, fechaInicio, fechaFin);
+
+                // Limpiar datos locales y formulario para nuevo ingreso
+                if (_vehiculosEnPlaya.ContainsKey(Placa.ToUpper()))
+                {
+                    _vehiculosEnPlaya.Remove(Placa.ToUpper());
+                    Ocupados--;
+                    NumeroTicket = null;
+                    _ultimoTicketRegistrado = null;
+                }
+                LimpiarFormulario(); // <-- Se limpia todo para ingresar otra placa
             }
             else
             {
-                mensaje = "Salida de vehículo registrada correctamente";
+                var errorContent = await response.Content.ReadAsStringAsync();
+                await DisplayAlert("Error", $"No se pudo registrar el pago. Código: {response.StatusCode}\nDetalle: {errorContent}", "OK");
             }
-            await DisplayAlert("Pago realizado",
-                $"Pago de S/. {TotalPagar:F2} realizado exitosamente.\n" +
-                $"Placa: {Placa}\nTipo: {vehiculo.Tipo}\n" +
-                $"Observación: {vehiculo.Observacion}\n" +
-                mensaje,
-                "OK");
-            _vehiculosEnPlaya.Remove(Placa.ToUpper());
-            Ocupados--;
-            NumeroTicket = null;
-            _ultimoTicketRegistrado = null;
-            LimpiarFormulario();
         }
-    }      
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", $"Error al realizar el pago: {ex.Message}", "OK");
+        }
+    }
+
+    // Genera el ticket de salida en PDF con los datos requeridos
+    private async Task GenerarTicketSalidaPDF(string numeroTicket, decimal totalCobrado, DateTime fechaInicio, DateTime fechaFin)
+    {
+        try
+        {
+            var pdf = new PdfDocument();
+            var page = pdf.AddPage();
+            page.Width = 300;
+            page.Height = 200;
+            var gfx = XGraphics.FromPdfPage(page);
+            var font = new XFont("Arial", 14, XFontStyle.Bold);
+            var fontSmall = new XFont("Arial", 10, XFontStyle.Regular);
+
+            gfx.DrawString("TICKET DE SALIDA", font, XBrushes.Black, new XRect(10, 10, page.Width, 20), XStringFormats.TopLeft);
+            gfx.DrawString($"N° Ticket: {numeroTicket}", fontSmall, XBrushes.Black, new XRect(10, 35, page.Width, 20), XStringFormats.TopLeft);
+            gfx.DrawString($"Placa: {Placa}", fontSmall, XBrushes.Black, new XRect(10, 55, page.Width, 20), XStringFormats.TopLeft);
+            gfx.DrawString($"Total cobrado: S/. {totalCobrado:F2}", fontSmall, XBrushes.Black, new XRect(10, 75, page.Width, 20), XStringFormats.TopLeft);
+            gfx.DrawString($"Fecha inicio: {fechaInicio:dd/MM/yyyy HH:mm}", fontSmall, XBrushes.Black, new XRect(10, 95, page.Width, 20), XStringFormats.TopLeft);
+            gfx.DrawString($"Fecha fin: {fechaFin:dd/MM/yyyy HH:mm}", fontSmall, XBrushes.Black, new XRect(10, 115, page.Width, 20), XStringFormats.TopLeft);
+
+            // Código de barras para la placa
+            var barcodeWriter = new BarcodeWriterPixelData
+            {
+                Format = BarcodeFormat.CODE_128,
+                Options = new EncodingOptions
+                {
+                    Height = 60,
+                    Width = 200,
+                    Margin = 2
+                }
+            };
+            var pixelData = barcodeWriter.Write(Placa);
+            using (var ms = new MemoryStream())
+            {
+                using (var image = new Image<Rgba32>(pixelData.Width, pixelData.Height))
+                {
+                    var bytes = pixelData.Pixels;
+                    for (int y = 0; y < pixelData.Height; y++)
+                    {
+                        for (int x = 0; x < pixelData.Width; x++)
+                        {
+                            int idx = (y * pixelData.Width + x) * 4;
+                            byte b = bytes[idx + 0];
+                            byte g = bytes[idx + 1];
+                            byte r = bytes[idx + 2];
+                            byte a = bytes[idx + 3];
+                            image[x, y] = new Rgba32(r, g, b, a);
+                        }
+                    }
+                    image.Save(ms, PngFormat.Instance);
+                    ms.Position = 0;
+                    var img = XImage.FromStream(() => ms);
+                    gfx.DrawImage(img, 50, 140, 200, 40);
+                }
+            }
+
+            var fileName = $"TicketSalida_{Placa}_{numeroTicket}.pdf";
+            var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            var filePath = Path.Combine(documents, fileName);
+            using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+            {
+                pdf.Save(fs);
+            }
+            await DisplayAlert("Ticket de salida generado", $"El ticket se guardó en: {filePath}", "OK");
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error al generar ticket de salida", ex.Message, "OK");
+        }
+    }
 
     private async void OnFacturaClicked(object sender, EventArgs e)
     {
