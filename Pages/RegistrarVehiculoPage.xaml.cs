@@ -26,7 +26,7 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
     // Tarifas por tipo de vehículo (fallback local)
 
     private readonly HttpClient _httpClient = new();
-    private readonly string _baseApi = "https://localhost:7211/"; // ajustar si es necesario
+    private readonly string _baseApi = "https://localhost:7211/"; // ajustar
 
     // Mapeo de códigos de tipo (p. ej. "0001") a texto mostrado (p. ej. "AUTOMOVIL")
     private readonly Dictionary<string, string> _mapaTipoCodigoADisplay = new();
@@ -886,12 +886,8 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
         EstadoIngreso = "";
         Observacion = "";
         TipoVehiculo = null;
-        Ocupados = Math.Max(Ocupados, 0); // Asegurarse de que no sea negativo
-        // No limpiar TarifaHora ni TotalPagar, ya que pueden ser necesarios para el siguiente registro
-        // Limpiar también el campo de tiempo estacionado
+        Ocupados = Math.Max(Ocupados, 0);
         TiempoEstacionado = "";
-
-        // Notificar cambio en la propiedad que habilita el botón Cambiar Plan
         OnPropertyChanged(nameof(CambiarPlanHabilitado));
     }
 
@@ -912,7 +908,7 @@ public class VehiculoInfo
     public string Observacion { get; set; }
 }
 
-// Modelos para deserializar las respuestas de la API
+// Modelos para deserializar las respuestas de la API Validar placa
 public class ValidaPlacaResponse
 {
     public int IdOperacion { get; set; }
