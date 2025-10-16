@@ -33,7 +33,8 @@ namespace sistemaPlaya
 
             try
             {
-                var url = $"https://localhost:7211/ValidarUsuario?nombreUsuario={Uri.EscapeDataString(usuario)}&clave={Uri.EscapeDataString(clave)}";
+                var urlBase = AppSettings.ApiUrl;
+                var url = $"{urlBase}ValidarUsuario?nombreUsuario={Uri.EscapeDataString(usuario)}&clave={Uri.EscapeDataString(clave)}";
                 var response = await _httpClient.GetAsync(url);
                 if (response.IsSuccessStatusCode)
                 {
@@ -77,7 +78,7 @@ namespace sistemaPlaya
 
     public class UsuarioInfo
     {
-    
+
         public int IdUsuario { get; set; }
         public string Usuario { get; set; }
         public string Nombre { get; set; }

@@ -53,7 +53,8 @@ namespace sistemaPlaya
             {
                 using (HttpClient client = new HttpClient())
                 {
-                    string url = $"https://localhost:7211/verificarCaja?idEmpresa={idEmpresa}&idUsuario={idUsuario}";
+                    var urlBase = AppSettings.ApiUrl;
+                    string url = $"{urlBase}verificarCaja?idEmpresa={idEmpresa}&idUsuario={idUsuario}";
                     var response = await client.GetAsync(url);
 
                     if (response.IsSuccessStatusCode)

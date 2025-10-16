@@ -26,7 +26,8 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
     // Tarifas por tipo de vehículo (fallback local)
 
     private readonly HttpClient _httpClient = new();
-    private readonly string _baseApi = "https://localhost:7211/"; // ajustar
+
+    private readonly string _baseApi = AppSettings.ApiUrl; // ajustar
 
     // Mapeo de códigos de tipo (p. ej. "0001") a texto mostrado (p. ej. "AUTOMOVIL")
     private readonly Dictionary<string, string> _mapaTipoCodigoADisplay = new();
