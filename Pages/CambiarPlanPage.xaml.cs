@@ -13,7 +13,6 @@ public partial class CambiarPlanPage : ContentPage
     public string TipoActual { get; }
     public event Action<string, decimal> OnPlanCambiado; // tipo nuevo, tarifa nueva
     private readonly HttpClient _httpClient = new();
-    private readonly string _baseApi = "https://localhost:7211/";
     private decimal _tarifaSeleccionada = 0m;
 
     public CambiarPlanPage(string tipoActual, Dictionary<string, decimal> tarifas)
@@ -30,6 +29,7 @@ public partial class CambiarPlanPage : ContentPage
     {
         try
         {
+            var _baseApi = AppSettings.ApiUrl;
             var url = $"{_baseApi}getComboTipoVehiculos?idEmpresa=1";
             var resp = await _httpClient.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -79,6 +79,7 @@ public partial class CambiarPlanPage : ContentPage
     {
         try
         {
+            var _baseApi = AppSettings.ApiUrl;
             var url = $"{_baseApi}validarTarifa?idEmpresa=1&itemVehiculo={Uri.EscapeDataString(itemVehiculo)}";
             var response = await _httpClient.GetAsync(url);
 

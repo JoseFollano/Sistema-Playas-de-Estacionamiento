@@ -9,6 +9,6 @@ namespace sistemaPlaya
 {
     internal class AppSettings
     {
-        public static string ApiUrl = "https://wpxd7k3l-5163.brs.devtunnels.ms/";
+        public static string ApiUrl = " https://vkrdl06r-5163.brs.devtunnels.ms/";
     }
 }

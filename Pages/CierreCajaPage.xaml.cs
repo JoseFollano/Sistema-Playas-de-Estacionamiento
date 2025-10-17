@@ -27,7 +27,7 @@ namespace sistemaPlaya
 
     public partial class CierreCajaPage : ContentPage
     {
-        // private const string BaseApiUrl = "https://localhost:7282/"; // <--- AJUSTA ESTA URL CUANDO TENGAS LAS APIS
+       
 
         private int _idUsuario;
         private string _nombreUsuario;
@@ -86,10 +86,11 @@ namespace sistemaPlaya
 
             try
             {
-                int idEmpresa = 1; // Cambia esto si tu lógica lo requiere
+                int idEmpresa = 1; // Cambia
                 using (HttpClient client = new HttpClient())
                 {
-                    string url = $"https://localhost:7211/cerrarCaja?idEmpresa={idEmpresa}&idCaja={_cajaAbiertaId}&idUsuario={_idUsuario}&nombreUsuario={Uri.EscapeDataString(_nombreUsuario)}&totalCobrado={totalCobrado}";
+                    var baseUrl = AppSettings.ApiUrl;
+                    string url = $"{baseUrl}cerrarCaja?idEmpresa={idEmpresa}&idCaja={_cajaAbiertaId}&idUsuario={_idUsuario}&nombreUsuario={Uri.EscapeDataString(_nombreUsuario)}&totalCobrado={totalCobrado}";
                     var response = await client.PostAsync(url, null);
 
                     if (response.IsSuccessStatusCode)

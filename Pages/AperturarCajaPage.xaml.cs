@@ -24,7 +24,6 @@ namespace sistemaPlaya
 
     public partial class AperturarCajaPage : ContentPage
     {
-        private const string BaseApiUrl = "https://localhost:7211/"; 
 
         private int _idUsuario;
         private string _nombreUsuario;
@@ -169,6 +168,7 @@ namespace sistemaPlaya
 
                 using (HttpClient client = new HttpClient())
                 {
+                    var BaseApiUrl = AppSettings.ApiUrl;
                     string requestUrl = $"{BaseApiUrl}guardarCaja?idEmpresa={idEmpresa}";
 
                     // Asegurarse de que el Content-Type esté correctamente establecido (StringContent ya lo hace)

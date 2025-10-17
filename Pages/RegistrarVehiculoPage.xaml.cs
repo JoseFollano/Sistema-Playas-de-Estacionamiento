@@ -15,6 +15,7 @@ using ZXing.Rendering;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Formats.Png;
+using Microsoft.Maui.ApplicationModel;
 
 namespace sistemaPlaya.Pages;
 
@@ -820,41 +821,7 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
             gfx.DrawString($"Fecha inicio: {fechaInicio:dd/MM/yyyy HH:mm}", fontSmall, XBrushes.Black, new XRect(10, 95, page.Width, 20), XStringFormats.TopLeft);
             gfx.DrawString($"Fecha fin: {fechaFin:dd/MM/yyyy HH:mm}", fontSmall, XBrushes.Black, new XRect(10, 115, page.Width, 20), XStringFormats.TopLeft);
 
-            // Código de barras para la placa
-            var barcodeWriter = new BarcodeWriterPixelData
-            {
-                Format = BarcodeFormat.CODE_128,
-                Options = new EncodingOptions
-                {
-                    Height = 60,
-                    Width = 200,
-                    Margin = 2
-                }
-            };
-            var pixelData = barcodeWriter.Write(Placa);
-            using (var ms = new MemoryStream())
-            {
-                using (var image = new Image<Rgba32>(pixelData.Width, pixelData.Height))
-                {
-                    var bytes = pixelData.Pixels;
-                    for (int y = 0; y < pixelData.Height; y++)
-                    {
-                        for (int x = 0; x < pixelData.Width; x++)
-                        {
-                            int idx = (y * pixelData.Width + x) * 4;
-                            byte b = bytes[idx + 0];
-                            byte g = bytes[idx + 1];
-                            byte r = bytes[idx + 2];
-                            byte a = bytes[idx + 3];
-                            image[x, y] = new Rgba32(r, g, b, a);
-                        }
-                    }
-                    image.Save(ms, PngFormat.Instance);
-                    ms.Position = 0;
-                    var img = XImage.FromStream(() => ms);
-                    gfx.DrawImage(img, 50, 140, 200, 40);
-                }
-            }
+            // Se removió la generación de código de barras para la placa en el ticket de salida.
 
             var fileName = $"TicketSalida_{Placa}_{numeroTicket}.pdf";
             var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
@@ -897,6 +864,101 @@ public partial class RegistrarVehiculoPage : ContentPage, INotifyPropertyChanged
     protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    private async void OnScannerClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            var status = await Permissions.CheckStatusAsync<Permissions.Camera>();
+            if (status != PermissionStatus.Granted)
+            {
+                status = await Permissions.RequestAsync<Permissions.Camera>();
+            }
+
+            if (status != PermissionStatus.Granted)
+            {
+                await DisplayAlert("Permiso denegado", "Se requiere permiso de cámara para tomar la foto.", "OK");
+                return;
+            }
+
+            var photo = await MediaPicker.CapturePhotoAsync();
+            if (photo == null)
+                return;
+
+            var filePath = Path.Combine(FileSystem.CacheDirectory, photo.FileName);
+
+            // Use using to ensure the read stream is disposed promptly
+            using (var readStream = await photo.OpenReadAsync())
+            using (var writeStream = File.OpenWrite(filePath))
+            {
+                await readStream.CopyToAsync(writeStream);
+            }
+
+            // Decodificar código de barras/QR desde la imagen
+            try
+            {
+                using (var fs = File.OpenRead(filePath))
+                using (var image = SixLabors.ImageSharp.Image.Load<Rgba32>(fs))
+                {
+                    int width = image.Width;
+                    int height = image.Height;
+
+                    var pixels = new byte[width * height * 3];
+                    for (int y = 0; y < height; y++)
+                    {
+                        for (int x = 0; x < width; x++)
+                        {
+                            var px = image[x, y];
+                            int idx = (y * width + x) * 3;
+                            pixels[idx + 0] = px.R;
+                            pixels[idx + 1] = px.G;
+                            pixels[idx + 2] = px.B;
+                        }
+                    }
+
+                    var source = new ZXing.RGBLuminanceSource(pixels, width, height, ZXing.RGBLuminanceSource.BitmapFormat.RGB24);
+                    var reader = new ZXing.BarcodeReaderGeneric { AutoRotate = true, TryInverted = true };
+                    var result = reader.Decode(source);
+                    if (result != null && !string.IsNullOrWhiteSpace(result.Text))
+                    {
+                        var placaDetectada = result.Text.Trim().ToUpper();
+
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            Placa = placaDetectada;
+                            EntryPlaca?.Focus();
+                        });
+
+                        // Llamar verificación automática después de asignar placa
+                        await VerificarPlacaAsync();
+
+                        await DisplayAlert("Escaneado", $"Código detectado: {result.Text}", "OK");
+
+                        // Delete temporary file
+                        try { File.Delete(filePath); } catch { }
+
+                        return;
+                    }
+                    else
+                    {
+                        await DisplayAlert("Captura", "No se detectó código de barras/QR en la imagen.", "OK");
+                    }
+                }
+
+                // Delete temporary file when no code found
+                try { File.Delete(filePath); } catch { }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error decodificando imagen: {ex}");
+                await DisplayAlert("Error", "No se pudo procesar la imagen para leer el código.", "OK");
+            }
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", ex.Message, "OK");
+        }
     }
 }
 

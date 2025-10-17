@@ -125,7 +125,9 @@
                                 HorizontalOptions="Center"
                                 VerticalOptions="Center"
                                 Padding="0"
-                                BorderColor="{StaticResource Success}" />
+                                BorderColor="{StaticResource Success}"
+                                Clicked="OnScannerClicked" />
+                            
                     </Grid>
 
                     <!-- Botón REGISTRAR abajo de la sección de placa -->
